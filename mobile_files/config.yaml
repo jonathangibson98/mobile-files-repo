@@ -2,7 +2,7 @@ name: Mobile Files
 version: "1.1.0"
 slug: mobile_files
 description: Phone-friendly file manager, text editor and Samba admin with full filesystem access
-url: https://github.com/jonathangibson98/mobile-files-repo
+url: https://github.com/jonathangibson98/mobile-files
 arch:
   - amd64
   - aarch64
