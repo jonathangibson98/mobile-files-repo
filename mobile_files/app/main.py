@@ -395,6 +395,12 @@ def write_text():
     if not isinstance(content, str):
         raise ValueError("Bad content")
     existed = p.exists()
+    if d.get("create"):
+        name = p.name
+        if existed:
+            raise ValueError("A file with that name already exists")
+        if not name or name in (".", ".."):
+            raise ValueError("Invalid file name")
     with p.open("wb") as f:          # in place: keeps owner and permissions
         f.write(content.encode("utf-8"))
     if not existed:
