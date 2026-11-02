@@ -18,7 +18,7 @@ from pathlib import Path
 from flask import (Flask, jsonify, request, send_file, send_from_directory,
                    session)
 
-DATA_DIR = Path(os.environ.get("DATA_DIR", "/data")).resolve()
+DATA_DIR = Path(os.environ.get("DATA_DIR", "/data")).resolve()  # root of what the UI can see ("/" = everything)
 CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", "/config")).resolve()
 SMB_CONF = Path(os.environ.get("SMB_CONF", "/etc/samba/smb.conf"))
 CONFIG_FILE = CONFIG_DIR / "config.json"
@@ -27,6 +27,19 @@ PUID = int(os.environ.get("PUID", "1000"))
 PGID = int(os.environ.get("PGID", "1000"))
 SAMBA_ENABLED = os.environ.get("SAMBA_ENABLED", "1") == "1"
 SYSTEM_USER = "files"
+
+
+def _json_list(name):
+    try:
+        v = json.loads(os.environ.get(name, "[]") or "[]")
+        return [str(x).strip() for x in v if str(x).strip()] if isinstance(v, list) else []
+    except ValueError:
+        return []
+
+
+HIDE_WEB = _json_list("HIDE_WEB_JSON")        # hidden AND blocked in the web UI
+HIDE_SAMBA = _json_list("HIDE_SAMBA_JSON")    # hidden in Samba listings (names only)
+MAX_EDIT_BYTES = 5 * 1024 * 1024
 
 NAME_RE = re.compile(r"^[A-Za-z0-9_.-]{1,40}$")
 USER_RE = re.compile(r"^[a-z_][a-z0-9_-]{0,30}$")
@@ -97,6 +110,13 @@ def render_smb_conf(cfg):
     ]
     if g.get("guest_map", True):
         lines.append("   map to guest = Bad User")
+    names = []
+    for e in HIDE_SAMBA:
+        n = e.rstrip("/").split("/")[-1].replace("\n", " ").strip()
+        if n:
+            names.append(n)
+    if names:
+        lines.append("   hide files = /" + "/".join(names) + "/")
     for s in cfg["shares"]:
         lines += [
             "",
@@ -220,15 +240,61 @@ def logout():
 
 @app.get("/api/me")
 def me():
-    return jsonify(auth=bool(session.get("auth")) or is_ingress(), samba=SAMBA_ENABLED)
+    return jsonify(auth=bool(session.get("auth")) or is_ingress(), samba=SAMBA_ENABLED,
+                   root=str(DATA_DIR), hidden=len(HIDE_RULES))
 
 
 # ----------------------------------------------------------------- files ---
+def _glob_regex(g):
+    out, i = [], 0
+    while i < len(g):
+        if g.startswith("**", i):
+            out.append(".*"); i += 2; continue
+        c = g[i]
+        out.append("[^/]*" if c == "*" else "[^/]" if c == "?" else re.escape(c))
+        i += 1
+    return "".join(out)
+
+
+def _compile_hide(entries):
+    """Entry forms: /full/path, bare name (matched anywhere), or wildcards (* ? **)."""
+    rules = []
+    for e in entries:
+        if "/" in e:
+            e = "/" + e.strip("/")
+            if e == "/":
+                continue  # would hide everything
+            rx = "^" + (_glob_regex(e) if ("*" in e or "?" in e) else re.escape(e)) + "(/.*)?$"
+        else:
+            rx = "(^|/)" + _glob_regex(e) + "(/.*)?$"
+        rules.append(re.compile(rx))
+    return rules
+
+
+HIDE_RULES = _compile_hide(HIDE_WEB)
+
+
+def is_hidden(p):
+    """Match full paths as written, and also paths relative to the root folder."""
+    p = Path(p)
+    cands = [str(p)]
+    try:
+        cands.append("/" + str(p.relative_to(DATA_DIR)))
+    except ValueError:
+        pass
+    return any(r.search(c) for r in HIDE_RULES for c in cands)
+
+
 def safe_path(rel):
     rel = (rel or "").lstrip("/")
-    p = (DATA_DIR / rel).resolve()
+    raw = Path(os.path.normpath(DATA_DIR / rel))
+    # Resolve the parent only, so a symlink itself can be renamed/deleted
+    # without touching whatever it points to.
+    p = raw if raw == DATA_DIR else raw.parent.resolve() / raw.name
     if p != DATA_DIR and DATA_DIR not in p.parents:
-        raise ValueError("Path outside data directory")
+        raise ValueError("Path outside root directory")
+    if HIDE_RULES and (is_hidden(raw) or is_hidden(p) or is_hidden(p.resolve())):
+        raise ValueError("Not found")
     return p
 
 
@@ -261,6 +327,12 @@ def os_err(e):
     return jsonify(error=e.strerror or str(e)), 400
 
 
+def _force_remove(func, path, _exc):
+    """rmtree error handler: clear read-only bits and retry once."""
+    os.chmod(path, 0o777)
+    func(path)
+
+
 @app.get("/api/files")
 @login_required
 def list_files():
@@ -269,6 +341,8 @@ def list_files():
         raise ValueError("Not a folder")
     items = []
     for e in os.scandir(p):
+        if HIDE_RULES and is_hidden(Path(e.path)):
+            continue
         try:
             st = e.stat()
         except OSError:
@@ -289,6 +363,43 @@ def download():
         raise ValueError("Not a file")
     inline = request.args.get("inline") == "1"
     return send_file(p, as_attachment=not inline, download_name=p.name)
+
+
+@app.get("/api/read")
+@login_required
+def read_text():
+    p = safe_path(request.args.get("path"))
+    if not p.is_file():
+        raise ValueError("Not a file")
+    size = p.stat().st_size
+    if size > MAX_EDIT_BYTES:
+        raise ValueError("File too large to edit here (max 5 MB)")
+    data = p.read_bytes()
+    if b"\0" in data:
+        raise ValueError("Binary file - download it instead")
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        text = data.decode("latin-1")
+    return jsonify(content=text, size=size)
+
+
+@app.put("/api/write")
+@login_required
+def write_text():
+    d = request.get_json(force=True)
+    p = safe_path(d.get("path"))
+    if p.exists() and not p.is_file():
+        raise ValueError("Not a file")
+    content = d.get("content", "")
+    if not isinstance(content, str):
+        raise ValueError("Bad content")
+    existed = p.exists()
+    with p.open("wb") as f:          # in place: keeps owner and permissions
+        f.write(content.encode("utf-8"))
+    if not existed:
+        chown(p)
+    return jsonify(ok=True)
 
 
 @app.post("/api/mkdir")
@@ -348,9 +459,13 @@ def delete():
         if p == DATA_DIR:
             raise ValueError("Cannot delete root")
         if p.is_dir() and not p.is_symlink():
-            shutil.rmtree(p)
+            shutil.rmtree(p, onerror=_force_remove)
         else:
-            p.unlink()
+            try:
+                p.unlink()
+            except PermissionError:
+                os.chmod(p, 0o666)
+                p.unlink()
     return jsonify(ok=True)
 
 
@@ -506,6 +621,16 @@ def samba_status():
 
 # ---------------------------------------------------------------- static ---
 STATIC = Path(__file__).parent / "static"
+
+
+@app.get("/icon.png")
+def icon():
+    return send_from_directory(STATIC, "icon.png")
+
+
+@app.get("/logo.png")
+def logo():
+    return send_from_directory(STATIC, "logo.png")
 
 
 @app.get("/")
