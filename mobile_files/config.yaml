@@ -1,4 +1,4 @@
-name: Mobile Files
+name: Mobile Files & Samba
 version: "1.2.0"
 slug: mobile_files
 description: Phone-friendly file manager, text editor and Samba admin with full filesystem access
@@ -12,7 +12,7 @@ startup: services
 boot: auto
 ingress: true
 ingress_port: 8080
-panel_icon: mdi:folder-network
+panel_icon: mdi:file-multiple
 panel_title: Files
 panel_admin: true
 ports:
