@@ -1,0 +1,27 @@
+services:
+  mobile-files:
+    build: .
+    container_name: mobile-files
+    restart: unless-stopped
+    environment:
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: change-me          # web UI login. Change this!
+      PUID: 1000                         # owner of files created via UI/Samba
+      PGID: 1000
+      TZ: America/New_York
+      # SAMBA_ENABLED: "0"               # set to 0 to run the web file manager only
+    ports:
+      - "8080:8080"                      # web UI
+      - "445:445"                        # SMB
+      - "139:139"                        # NetBIOS session (older clients)
+    volumes:
+      - ./data:/data                     # files you want to browse/share
+      - ./config:/config                 # web UI + Samba settings (config.json)
+      - samba-db:/var/lib/samba          # Samba password database
+
+    # Optional: host networking makes the server show up in Windows/macOS network
+    # discovery (needs nmbd broadcasts). If you use it, delete the `ports:` block.
+    # network_mode: host
+
+volumes:
+  samba-db:
