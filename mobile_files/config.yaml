@@ -1,5 +1,5 @@
 name: Mobile Files & Samba
-version: "1.2.0"
+version: "1.2.1"
 slug: mobile_files
 description: Phone-friendly file manager, text editor and Samba admin with full filesystem access
 url: https://github.com/jonathangibson98/mobile-files-repo
@@ -13,7 +13,7 @@ boot: auto
 ingress: true
 ingress_port: 8080
 panel_icon: mdi:file-multiple
-panel_title: Files
+panel_title: File Editor & Samba
 panel_admin: true
 ports:
   8080/tcp: null
