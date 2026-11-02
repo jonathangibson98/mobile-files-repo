@@ -1,6 +1,8 @@
 #!/usr/bin/with-contenv bashio
 set -e
 
+OPTS=/data/options.json
+
 export ADMIN_USER="$(bashio::config 'admin_user')"
 export ADMIN_PASSWORD="$(bashio::config 'admin_password')"
 export PUID="$(bashio::config 'puid')"
@@ -9,15 +11,23 @@ export SAMBA_ENABLED=0
 bashio::config.true 'samba_enabled' && SAMBA_ENABLED=1
 export PORT=8080
 
-# Files live under /share (shown as the "files" share). Settings persist in /config
-# (= /addon_configs/<slug>/ on the host) and the Samba password DB is kept there too.
-export DATA_DIR=/share
-export CONFIG_DIR=/config
-mkdir -p /share /config/samba-db /var/log/samba /run/samba
+ROOT_PATH="$(bashio::config 'root_path')"
+case "$ROOT_PATH" in /*) ;; *) bashio::log.warning "root_path must start with '/', using '/'"; ROOT_PATH=/ ;; esac
+export DATA_DIR="$ROOT_PATH"
+
+export HIDE_WEB_JSON="$(jq -c '.hide_from_web // []' "$OPTS")"
+export HIDE_SAMBA_JSON="$(jq -c '.hide_from_samba // []' "$OPTS")"
+bashio::log.info "Root folder: ${DATA_DIR}"
+bashio::log.info "Hidden in web UI: ${HIDE_WEB_JSON}"
+bashio::log.info "Hidden in Samba (names only): ${HIDE_SAMBA_JSON}"
+
+# The add-on's own persistent storage (settings, Samba users). /config is Home Assistant's config.
+export CONFIG_DIR=/data
+mkdir -p /data/samba-db /var/log/samba /run/samba
 
 # Persist Samba's password database across restarts/updates
 rm -rf /var/lib/samba
-ln -sfn /config/samba-db /var/lib/samba
+ln -sfn /data/samba-db /var/lib/samba
 mkdir -p /var/lib/samba/private
 
 if [ "$SAMBA_ENABLED" = "1" ]; then

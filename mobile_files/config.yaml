@@ -1,8 +1,8 @@
 name: Mobile Files
-version: "1.0.0"
+version: "1.1.0"
 slug: mobile_files
-description: Phone-friendly file manager and Samba share admin
-url: https://github.com/jonathangibson98/mobile-files-repo
+description: Phone-friendly file manager, text editor and Samba admin with full filesystem access
+url: https://github.com/jonathangibson98/mobile-files
 arch:
   - amd64
   - aarch64
@@ -14,27 +14,36 @@ ingress: true
 ingress_port: 8080
 panel_icon: mdi:folder-network
 panel_title: Files
+panel_admin: true
 ports:
   8080/tcp: null
   445/tcp: 445
   139/tcp: 139
-ports_description:
-  8080/tcp: Web UI (optional, ingress works without it)
-  445/tcp: SMB
-  139/tcp: NetBIOS session
 map:
+  - config:rw
   - share:rw
   - media:rw
-  - addon_config:rw
+  - backup:rw
+  - ssl:rw
+  - addons:rw
+  - all_addon_configs:rw
 options:
   admin_user: admin
   admin_password: ""
+  root_path: /
+  hide_from_web: []
+  hide_from_samba: []
   samba_enabled: true
   puid: 0
   pgid: 0
 schema:
   admin_user: str
   admin_password: password?
+  root_path: str
+  hide_from_web:
+    - str
+  hide_from_samba:
+    - str
   samba_enabled: bool
   puid: int
   pgid: int
