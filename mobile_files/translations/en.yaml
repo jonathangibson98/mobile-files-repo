@@ -1,1 +1,38 @@
-y
+configuration:
+  admin_user:
+    name: Web UI username
+    description: Only used when opening the UI directly on port 8080. Ingress (sidebar) needs no login.
+  admin_password:
+    name: Web UI password
+    description: Only used for direct access on port 8080. Leave empty to generate one (shown in the log).
+  root_path:
+    name: Root folder
+    description: >-
+      Top of what the file manager and the default Samba share can see.
+      "/" is the whole add-on filesystem, including /config, /share, /media,
+      /backup, /ssl, /addons and /addon_configs.
+  hide_from_web:
+    name: Hide from web UI
+    description: >-
+      Hidden AND blocked in the web UI. One per line. Use a full path
+      (/config/secrets.yaml), a name matched anywhere (.storage), or wildcards
+      (*.db, /config/*.bak, /config/**/secrets*).
+  hide_from_samba:
+    name: Hide from Samba
+    description: >-
+      Names to hide in Samba listings (secrets.yaml, .storage, *.db). Samba only
+      matches names, not full paths, so a name is hidden everywhere. Hidden items
+      can still be reached if someone types the exact path.
+  samba_enabled:
+    name: Enable Samba
+    description: Turn off to run only the web file manager.
+  puid:
+    name: File owner UID
+    description: Owner of files created via the UI or Samba. 0 = root (recommended for full access).
+  pgid:
+    name: File owner GID
+    description: Group of files created via the UI or Samba. 0 = root.
+network:
+  8080/tcp: Web UI (optional, ingress works without it)
+  445/tcp: SMB
+  139/tcp: NetBIOS session
