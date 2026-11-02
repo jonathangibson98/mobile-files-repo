@@ -27,7 +27,7 @@ By default there is one share, `files`, pointing at `/data` (mounted from `./dat
 2. Add `https://github.com/jonathangibson98/mobile-files`.
 3. Install **Mobile Files**, start it, and open **Files** from the sidebar (ingress, no extra login).
 
-Files are stored in HA's `/share` folder and the default Samba share `files` points there. Add-on options: `admin_user`, `admin_password` (only needed for direct access on port 8080), `samba_enabled`, `puid`, `pgid`. See [`mobile_files/DOCS.md`](mobile_files/DOCS.md).
+The add-on sees the whole filesystem (`/config`, `/share`, `/media`, `/backup`, `/ssl`, `/addons`, `/addon_configs`) and can view, edit, rename, move and delete anything. Add-on options: `root_path`, `hide_from_web`, `hide_from_samba`, `admin_user`, `admin_password` (only for direct access on port 8080), `samba_enabled`, `puid`, `pgid`. See [`mobile_files/DOCS.md`](mobile_files/DOCS.md).
 
 ## Repo layout
 
