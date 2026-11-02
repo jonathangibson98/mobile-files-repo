@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f1115">
 <title>Mobile Files</title>
+<link rel="icon" type="image/png" href="icon.png">
 <style>
 :root{--bg:#0f1115;--panel:#181b22;--panel2:#1f232c;--line:#2a2f3a;--text:#e8eaf0;--muted:#8b93a5;--accent:#4f8cff;--danger:#ff5d6c;--ok:#3ecf8e;--r:12px}
 @media (prefers-color-scheme:light){:root{--bg:#f4f5f8;--panel:#fff;--panel2:#eef0f5;--line:#dde0e8;--text:#171a21;--muted:#6a7183}}
@@ -62,6 +63,13 @@ pre{background:var(--panel2);border-radius:10px;padding:10px;overflow:auto;font-
 .prog{height:4px;background:var(--panel2);border-radius:2px;overflow:hidden;margin:8px 0}
 .prog i{display:block;height:100%;background:var(--accent);width:0}
 .hidden{display:none!important}
+.bar img,.login img{width:28px;height:28px;border-radius:50%;vertical-align:middle;margin-right:8px}
+.login img{width:72px;height:72px;display:block;margin:0 0 12px}
+.editor{position:fixed;inset:0;z-index:15;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+.edbar{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line)}
+.edbar b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.edbar span{display:flex;gap:8px;flex:none}
+.editor textarea{flex:1;width:100%;border:0;outline:0;resize:none;background:var(--panel);color:var(--text);padding:12px 12px calc(12px + env(safe-area-inset-bottom));font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;tab-size:2;white-space:pre;overflow:auto}
 </style>
 </head>
 <body>
@@ -114,7 +122,7 @@ function confirm2(title, text, ok='Delete') {
 
 /* ---------------------------------------------------------------- login */
 function renderLogin() {
-  $('#app').innerHTML = `<div class="login"><h1>Mobile Files</h1><p style="color:var(--muted)">Sign in to continue</p>
+  $('#app').innerHTML = `<div class="login"><img src="logo.png" alt=""><h1>Mobile Files</h1><p style="color:var(--muted)">Sign in to continue</p>
   <label class="f">Username</label><input id="u" type="text" value="admin" autocomplete="username" autocapitalize="none">
   <label class="f">Password</label><input id="p" type="password" autocomplete="current-password">
   <div class="btns"><button id="go" class="primary" style="width:100%">Sign in</button></div></div>`;
@@ -127,7 +135,7 @@ function renderLogin() {
 
 /* ---------------------------------------------------------------- shell */
 function renderShell() {
-  $('#app').innerHTML = `<header><div class="bar"><h1>Mobile Files</h1><button id="lo">Sign out</button></div>
+  $('#app').innerHTML = `<header><div class="bar"><h1><img src="icon.png" alt="">Mobile Files</h1><button id="lo">Sign out</button></div>
   <div class="tabs"><button data-t="files">Files</button><button data-t="samba" class="${state.sambaEnabled?'':'hidden'}">Samba</button></div></header>
   <main id="main"></main>`;
   $('#lo').onclick = async () => { await api('api/logout', {method:'POST'}); renderLogin(); };
@@ -191,10 +199,11 @@ function itemMenu(it) {
   const full = join(state.path, it.name);
   const m = modal(`<h3>${h(it.name)}</h3>
     <div style="display:grid;gap:8px">
-    ${it.dir ? '' : '<button id="a-dl">Download</button>'}
+    ${it.dir ? '' : '<button id="a-ed">Edit</button><button id="a-dl">Download</button>'}
     <button id="a-rn">Rename</button><button id="a-mv">Move to…</button><button id="a-sel">Select</button>
     <button id="a-del" class="danger">Delete</button></div>`);
   const on = (id, fn) => { const b = $(id, m); if (b) b.onclick = guard(async () => { m.remove(); await fn(); }); };
+  on('#a-ed', () => editFile(full, it.name));
   on('#a-dl', () => { location = 'api/download?path=' + encodeURIComponent(full); });
   on('#a-rn', async () => {
     const n = await prompt2('Rename', 'New name', it.name, 'Rename'); if (!n || n === it.name) return;
@@ -203,6 +212,22 @@ function itemMenu(it) {
   on('#a-mv', () => moveItems([it.name]));
   on('#a-sel', () => { state.sel.add(it.name); drawFiles(); });
   on('#a-del', () => deleteItems([it.name]));
+}
+async function editFile(full, name) {
+  const d = await api('api/read?path=' + encodeURIComponent(full));
+  const ov = document.createElement('div'); ov.className = 'editor';
+  ov.innerHTML = `<div class="edbar"><b>${h(name)}</b><span><button id="e-c">Close</button><button id="e-s" class="primary">Save</button></span></div><textarea id="e-t" spellcheck="false" autocapitalize="none" autocomplete="off" autocorrect="off" wrap="off"></textarea>`;
+  document.body.appendChild(ov);
+  const t = $('#e-t', ov); t.value = d.content; let dirty = false;
+  t.oninput = () => { dirty = true; };
+  t.onkeydown = e => { if (e.key === 'Tab') { e.preventDefault(); document.execCommand('insertText', false, '  '); } };
+  $('#e-s', ov).onclick = guard(async () => {
+    await api('api/write', {method:'PUT', json:{path:full, content:t.value}}); dirty = false; toast('Saved');
+  });
+  $('#e-c', ov).onclick = async () => {
+    if (dirty && !await confirm2('Discard changes?', 'You have unsaved changes.', 'Discard')) return;
+    ov.remove(); loadFiles(state.path);
+  };
 }
 async function deleteItems(names) {
   if (!await confirm2('Delete', `Delete ${names.length} item${names.length>1?'s':''}? This cannot be undone.`)) return;
