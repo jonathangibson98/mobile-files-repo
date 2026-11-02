@@ -1,1 +1,345 @@
-h
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<title>Mobile Files</title>
+<style>
+:root{--bg:#0f1115;--panel:#181b22;--panel2:#1f232c;--line:#2a2f3a;--text:#e8eaf0;--muted:#8b93a5;--accent:#4f8cff;--danger:#ff5d6c;--ok:#3ecf8e;--r:12px}
+@media (prefers-color-scheme:light){:root{--bg:#f4f5f8;--panel:#fff;--panel2:#eef0f5;--line:#dde0e8;--text:#171a21;--muted:#6a7183}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+button,input,select{font:inherit;color:inherit}
+button{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.danger{color:var(--danger)}
+button:disabled{opacity:.5}
+input[type=text],input[type=password],select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+label.f{display:block;margin:12px 0 4px;color:var(--muted);font-size:13px}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:env(safe-area-inset-top) 12px 0}
+.bar{display:flex;align-items:center;gap:8px;height:52px}
+.bar h1{font-size:18px;margin:0;flex:1}
+.tabs{display:flex;gap:4px}
+.tabs button{flex:1;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted)}
+.tabs button.on{color:var(--text);border-color:var(--accent)}
+main{max-width:860px;margin:0 auto;padding:12px 12px calc(90px + env(safe-area-inset-bottom))}
+.crumbs{display:flex;flex-wrap:wrap;gap:2px;align-items:center;font-size:14px;margin-bottom:8px;color:var(--muted)}
+.crumbs a{color:var(--accent);cursor:pointer;padding:4px 2px}
+.list{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+.row .ic{width:28px;text-align:center;font-size:20px}
+.row .nm{flex:1;min-width:0}
+.row .nm b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .nm small{color:var(--muted)}
+.row input[type=checkbox]{width:20px;height:20px}
+.row .more{background:none;border:0;padding:6px 10px;font-size:20px;color:var(--muted)}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;gap:10px}
+.fab button{box-shadow:0 4px 14px #0006;padding:14px 18px;border-radius:30px}
+.selbar{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:center;z-index:6}
+.selbar span{flex:1;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:14px}
+.card h2{margin:0 0 4px;font-size:16px}
+.card p{margin:0 0 8px;color:var(--muted);font-size:13px}
+.chk{display:flex;align-items:center;gap:10px;padding:8px 0}
+.chk input{width:20px;height:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pill{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:4px 10px;margin:2px 4px 2px 0;font-size:13px}
+.pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--danger);margin-right:6px}
+.dot.ok{background:var(--ok)}
+pre{background:var(--panel2);border-radius:10px;padding:10px;overflow:auto;font-size:12px;margin:8px 0 0;white-space:pre-wrap}
+.modal{position:fixed;inset:0;background:#000a;display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.modal>div{background:var(--panel);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+@media(min-width:600px){.modal{align-items:center}.modal>div{border-radius:18px}}
+.modal h3{margin:0 0 8px}
+.btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#111;color:#fff;padding:10px 16px;border-radius:20px;z-index:30;max-width:90%}
+.toast.err{background:var(--danger)}
+.login{max-width:360px;margin:15vh auto 0;padding:0 16px}
+.prog{height:4px;background:var(--panel2);border-radius:2px;overflow:hidden;margin:8px 0}
+.prog i{display:block;height:100%;background:var(--accent);width:0}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const $ = (s, el=document) => el.querySelector(s);
+const h = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const state = {tab:'files', path:'', items:[], sel:new Set(), disk:null, samba:null, status:null, sambaEnabled:true};
+
+async function api(url, opts={}) {
+  opts.headers = Object.assign({'X-Requested-With':'mobile-files'}, opts.headers||{});
+  if (opts.json !== undefined) { opts.body = JSON.stringify(opts.json); opts.headers['Content-Type']='application/json'; delete opts.json; }
+  const r = await fetch(url, opts);
+  let d = {}; try { d = await r.json(); } catch(e) {}
+  if (r.status === 401 && !url.includes('/login')) { renderLogin(); throw new Error('Signed out'); }
+  if (!r.ok) throw new Error(d.error || ('Error ' + r.status));
+  return d;
+}
+function toast(msg, err) {
+  const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3200);
+}
+const guard = (fn) => async (...a) => { try { await fn(...a); } catch (e) { toast(e.message, true); } };
+function fmtSize(n){ if(n<1024) return n+' B'; const u=['KB','MB','GB','TB']; let i=-1; do{n/=1024;i++}while(n>=1024&&i<3); return n.toFixed(n<10?1:0)+' '+u[i]; }
+function fmtDate(t){ return new Date(t*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}); }
+
+function modal(html, onMount) {
+  const m = document.createElement('div'); m.className = 'modal';
+  m.innerHTML = '<div>' + html + '</div>';
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  document.body.appendChild(m); if (onMount) onMount(m);
+  return m;
+}
+function prompt2(title, label, value='', ok='OK', type='text') {
+  return new Promise(res => {
+    const m = modal(`<h3>${h(title)}</h3><label class="f">${h(label)}</label><input id="pi" type="${type}" value="${h(value)}"><div class="btns"><button id="c">Cancel</button><button id="o" class="primary">${h(ok)}</button></div>`);
+    const i = $('#pi', m); i.focus(); i.select();
+    const done = v => { m.remove(); res(v); };
+    $('#c', m).onclick = () => done(null); $('#o', m).onclick = () => done(i.value);
+    i.onkeydown = e => { if (e.key === 'Enter') done(i.value); };
+  });
+}
+function confirm2(title, text, ok='Delete') {
+  return new Promise(res => {
+    const m = modal(`<h3>${h(title)}</h3><p>${h(text)}</p><div class="btns"><button id="c">Cancel</button><button id="o" class="primary danger" style="color:#fff;background:var(--danger);border-color:var(--danger)">${h(ok)}</button></div>`);
+    $('#c', m).onclick = () => { m.remove(); res(false); }; $('#o', m).onclick = () => { m.remove(); res(true); };
+  });
+}
+
+/* ---------------------------------------------------------------- login */
+function renderLogin() {
+  $('#app').innerHTML = `<div class="login"><h1>Mobile Files</h1><p style="color:var(--muted)">Sign in to continue</p>
+  <label class="f">Username</label><input id="u" type="text" value="admin" autocomplete="username" autocapitalize="none">
+  <label class="f">Password</label><input id="p" type="password" autocomplete="current-password">
+  <div class="btns"><button id="go" class="primary" style="width:100%">Sign in</button></div></div>`;
+  const go = guard(async () => {
+    await api('/api/login', {method:'POST', json:{username:$('#u').value, password:$('#p').value}});
+    boot();
+  });
+  $('#go').onclick = go; $('#p').onkeydown = e => { if (e.key === 'Enter') go(); };
+}
+
+/* ---------------------------------------------------------------- shell */
+function renderShell() {
+  $('#app').innerHTML = `<header><div class="bar"><h1>Mobile Files</h1><button id="lo">Sign out</button></div>
+  <div class="tabs"><button data-t="files">Files</button><button data-t="samba" class="${state.sambaEnabled?'':'hidden'}">Samba</button></div></header>
+  <main id="main"></main>`;
+  $('#lo').onclick = async () => { await api('/api/logout', {method:'POST'}); renderLogin(); };
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { state.tab = b.dataset.t; draw(); });
+  draw();
+}
+function draw() {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === state.tab));
+  if (state.tab === 'files') loadFiles(state.path); else loadSamba();
+}
+
+/* ---------------------------------------------------------------- files */
+const loadFiles = guard(async (path='') => {
+  const d = await api('/api/files?path=' + encodeURIComponent(path));
+  state.path = d.path; state.items = d.items; state.disk = d.disk; state.sel.clear();
+  drawFiles();
+});
+const join = (a, b) => a ? a + '/' + b : b;
+function drawFiles() {
+  const parts = state.path ? state.path.split('/') : [];
+  let acc = '', crumbs = `<a data-p="">Home</a>`;
+  parts.forEach(p => { acc = join(acc, p); crumbs += ` / <a data-p="${h(acc)}">${h(p)}</a>`; });
+  const rows = state.items.map((it, i) => `<div class="row" data-i="${i}">
+    <input type="checkbox" data-i="${i}" ${state.sel.has(it.name)?'checked':''}>
+    <div class="ic">${it.dir ? '📁' : '📄'}</div>
+    <div class="nm"><b>${h(it.name)}</b><small>${it.dir ? 'Folder' : fmtSize(it.size)} · ${fmtDate(it.mtime)}</small></div>
+    <button class="more" data-m="${i}">⋯</button></div>`).join('');
+  const sel = state.sel.size;
+  $('#main').innerHTML = `<div class="crumbs">${crumbs}</div>
+    <div class="list">${rows || '<div class="empty">This folder is empty</div>'}</div>
+    <p style="color:var(--muted);font-size:12px;text-align:center">${state.disk ? fmtSize(state.disk.free) + ' free of ' + fmtSize(state.disk.total) : ''}</p>
+    <div id="prog" class="hidden"><div class="prog"><i></i></div></div>
+    ${sel ? `<div class="selbar"><span>${sel} selected</span><button id="mv">Move</button><button id="dl" class="danger">Delete</button><button id="cl">✕</button></div>`
+          : `<div class="fab"><button id="nf">＋ Folder</button><button id="up" class="primary">⬆ Upload</button></div>`}
+    <input id="file" type="file" multiple class="hidden">`;
+  document.querySelectorAll('.crumbs a').forEach(a => a.onclick = () => loadFiles(a.dataset.p));
+  document.querySelectorAll('.row').forEach(r => r.onclick = e => {
+    if (e.target.matches('input,.more')) return;
+    const it = state.items[r.dataset.i];
+    if (state.sel.size) toggleSel(it.name);
+    else if (it.dir) loadFiles(join(state.path, it.name));
+    else window.open('/api/download?inline=1&path=' + encodeURIComponent(join(state.path, it.name)));
+  });
+  document.querySelectorAll('.row input').forEach(c => c.onchange = () => toggleSel(state.items[c.dataset.i].name));
+  document.querySelectorAll('.more').forEach(b => b.onclick = () => itemMenu(state.items[b.dataset.m]));
+  if (sel) {
+    $('#cl').onclick = () => { state.sel.clear(); drawFiles(); };
+    $('#dl').onclick = guard(async () => { await deleteItems([...state.sel]); });
+    $('#mv').onclick = guard(async () => { await moveItems([...state.sel]); });
+  } else {
+    $('#nf').onclick = guard(async () => {
+      const n = await prompt2('New folder', 'Folder name', '', 'Create'); if (!n) return;
+      await api('/api/mkdir', {method:'POST', json:{path:state.path, name:n}}); loadFiles(state.path);
+    });
+    $('#up').onclick = () => $('#file').click();
+    $('#file').onchange = e => upload([...e.target.files]);
+  }
+}
+function toggleSel(n) { state.sel.has(n) ? state.sel.delete(n) : state.sel.add(n); drawFiles(); }
+function itemMenu(it) {
+  const full = join(state.path, it.name);
+  const m = modal(`<h3>${h(it.name)}</h3>
+    <div style="display:grid;gap:8px">
+    ${it.dir ? '' : '<button id="a-dl">Download</button>'}
+    <button id="a-rn">Rename</button><button id="a-mv">Move to…</button><button id="a-sel">Select</button>
+    <button id="a-del" class="danger">Delete</button></div>`);
+  const on = (id, fn) => { const b = $(id, m); if (b) b.onclick = guard(async () => { m.remove(); await fn(); }); };
+  on('#a-dl', () => { location = '/api/download?path=' + encodeURIComponent(full); });
+  on('#a-rn', async () => {
+    const n = await prompt2('Rename', 'New name', it.name, 'Rename'); if (!n || n === it.name) return;
+    await api('/api/rename', {method:'POST', json:{path:full, name:n}}); loadFiles(state.path);
+  });
+  on('#a-mv', () => moveItems([it.name]));
+  on('#a-sel', () => { state.sel.add(it.name); drawFiles(); });
+  on('#a-del', () => deleteItems([it.name]));
+}
+async function deleteItems(names) {
+  if (!await confirm2('Delete', `Delete ${names.length} item${names.length>1?'s':''}? This cannot be undone.`)) return;
+  await api('/api/delete', {method:'POST', json:{paths:names.map(n => join(state.path, n))}});
+  loadFiles(state.path);
+}
+async function moveItems(names) {
+  // folder picker: browse from root
+  let cur = '';
+  const dest = await new Promise(res => {
+    const m = modal('<h3>Move to…</h3><div id="pk"></div><div class="btns"><button id="c">Cancel</button><button id="o" class="primary">Move here</button></div>');
+    const show = guard(async () => {
+      const d = await api('/api/files?path=' + encodeURIComponent(cur));
+      const dirs = d.items.filter(i => i.dir && !(names.includes(i.name) && cur === state.path));
+      $('#pk', m).innerHTML = `<p style="color:var(--muted)">/${h(cur)}</p>` + (cur ? '<div class="row" data-up="1"><div class="ic">⬆</div><div class="nm"><b>..</b></div></div>' : '') +
+        dirs.map(i => `<div class="row" data-n="${h(i.name)}"><div class="ic">📁</div><div class="nm"><b>${h(i.name)}</b></div></div>`).join('');
+      $('#pk', m).querySelectorAll('.row').forEach(r => r.onclick = () => {
+        cur = r.dataset.up ? cur.split('/').slice(0, -1).join('/') : join(cur, r.dataset.n); show();
+      });
+    });
+    show();
+    $('#c', m).onclick = () => { m.remove(); res(null); };
+    $('#o', m).onclick = () => { m.remove(); res(cur); };
+  });
+  if (dest === null) return;
+  await api('/api/move', {method:'POST', json:{paths:names.map(n => join(state.path, n)), dest}});
+  toast('Moved'); loadFiles(state.path);
+}
+function upload(files) {
+  if (!files.length) return;
+  const fd = new FormData(); files.forEach(f => fd.append('files', f));
+  const x = new XMLHttpRequest();
+  x.open('POST', '/api/upload?path=' + encodeURIComponent(state.path));
+  x.setRequestHeader('X-Requested-With', 'mobile-files');
+  const p = $('#prog'); p.classList.remove('hidden');
+  x.upload.onprogress = e => { if (e.lengthComputable) $('#prog i').style.width = (e.loaded / e.total * 100) + '%'; };
+  x.onload = () => { x.status < 300 ? (toast('Uploaded ' + files.length + ' file(s)'), loadFiles(state.path)) : toast(JSON.parse(x.responseText).error || 'Upload failed', true); };
+  x.onerror = () => toast('Upload failed', true);
+  x.send(fd);
+}
+
+/* ---------------------------------------------------------------- samba */
+const loadSamba = guard(async () => {
+  const [d, s] = await Promise.all([api('/api/samba'), api('/api/samba/status')]);
+  state.samba = {global: d.global_, shares: d.shares, users: d.users, data_dir: d.data_dir}; state.status = s;
+  drawSamba();
+});
+function drawSamba() {
+  const {global: g, shares, users} = state.samba;
+  const shareCards = shares.map((s, i) => `<div class="card" data-s="${i}">
+    <h2>${h(s.name)}</h2><p>${h(s.path)}</p>
+    <div>${s.read_only ? '<span class="pill">Read-only</span>' : '<span class="pill">Read/write</span>'}
+    ${s.guest_ok ? '<span class="pill">Guest</span>' : ''}${s.browseable ? '' : '<span class="pill">Hidden</span>'}
+    ${s.valid_users.length ? '<span class="pill">Users: ' + h(s.valid_users.join(', ')) + '</span>' : '<span class="pill">All users</span>'}</div>
+    <div class="btns" style="justify-content:flex-start"><button data-edit="${i}">Edit</button><button data-rm="${i}" class="danger">Remove</button></div></div>`).join('');
+  const userRows = users.map(u => `<div class="row"><div class="ic">👤</div><div class="nm"><b>${h(u)}</b></div>
+    <button data-pw="${h(u)}">Password</button><button data-du="${h(u)}" class="danger">✕</button></div>`).join('');
+  $('#main').innerHTML = `
+  <div class="card"><h2><span class="dot ${state.status.running ? 'ok' : ''}"></span>Samba ${state.status.running ? 'running' : 'stopped'}</h2>
+    <details><summary style="color:var(--muted);cursor:pointer">Active connections</summary><pre>${h(state.status.connections || 'None')}</pre></details></div>
+  <div class="card"><h2>Server</h2>
+    <label class="f">Workgroup</label><input id="g-wg" type="text" value="${h(g.workgroup)}">
+    <label class="f">Server description</label><input id="g-ss" type="text" value="${h(g.server_string)}">
+    <label class="f">Minimum protocol</label><select id="g-mp">${['SMB2','SMB3','NT1'].map(v => `<option ${g.min_protocol===v?'selected':''}>${v}</option>`).join('')}</select>
+    <label class="chk"><input id="g-gm" type="checkbox" ${g.guest_map ? 'checked' : ''}> Allow guest access (unknown users map to guest)</label>
+    <div class="btns"><button id="g-save" class="primary">Save &amp; apply</button></div></div>
+  <h2 style="margin:18px 4px 8px;font-size:16px">Shares</h2>${shareCards || '<div class="empty">No shares</div>'}
+  <button id="s-add" style="width:100%;margin-bottom:18px">＋ Add share</button>
+  <h2 style="margin:6px 4px 8px;font-size:16px">Samba users</h2>
+  <div class="list">${userRows || '<div class="empty">No users yet. Add one to restrict shares.</div>'}</div>
+  <button id="u-add" style="width:100%;margin-top:10px">＋ Add user</button>`;
+  $('#g-save').onclick = guard(async () => {
+    state.samba.global = {workgroup:$('#g-wg').value, server_string:$('#g-ss').value, min_protocol:$('#g-mp').value, guest_map:$('#g-gm').checked};
+    await saveSamba('Samba settings applied');
+  });
+  $('#s-add').onclick = () => shareDialog(null);
+  document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => shareDialog(+b.dataset.edit));
+  document.querySelectorAll('[data-rm]').forEach(b => b.onclick = guard(async () => {
+    const s = shares[+b.dataset.rm];
+    if (!await confirm2('Remove share', `Stop sharing "${s.name}"? Files are not deleted.`, 'Remove')) return;
+    shares.splice(+b.dataset.rm, 1); await saveSamba('Share removed');
+  }));
+  $('#u-add').onclick = guard(async () => {
+    const n = await prompt2('New Samba user', 'Username (lowercase)', '', 'Next'); if (!n) return;
+    const p = await prompt2('Password', 'At least 6 characters', '', 'Create', 'password'); if (!p) return;
+    await api('/api/samba/users', {method:'POST', json:{name:n, password:p}}); toast('User created'); loadSamba();
+  });
+  document.querySelectorAll('[data-pw]').forEach(b => b.onclick = guard(async () => {
+    const p = await prompt2('New password for ' + b.dataset.pw, 'At least 6 characters', '', 'Change', 'password'); if (!p) return;
+    await api(`/api/samba/users/${encodeURIComponent(b.dataset.pw)}/password`, {method:'POST', json:{password:p}}); toast('Password changed');
+  }));
+  document.querySelectorAll('[data-du]').forEach(b => b.onclick = guard(async () => {
+    if (!await confirm2('Delete user', `Delete Samba user "${b.dataset.du}"?`)) return;
+    await api('/api/samba/users/' + encodeURIComponent(b.dataset.du), {method:'DELETE'}); loadSamba();
+  }));
+}
+async function saveSamba(msg) {
+  const s = state.samba;
+  await api('/api/samba', {method:'PUT', json:{global:s.global, shares:s.shares}});
+  toast(msg); loadSamba();
+}
+function shareDialog(idx) {
+  const s = idx === null ? {name:'', path:state.samba.data_dir, comment:'', read_only:false, guest_ok:false, browseable:true, valid_users:[], write_list:[]} : state.samba.shares[idx];
+  const users = state.samba.users;
+  const pills = (key) => users.length ? users.map(u => `<span class="pill ${s[key].includes(u)?'on':''}" data-k="${key}" data-u="${h(u)}">${h(u)}</span>`).join('') : '<small style="color:var(--muted)">No users defined</small>';
+  const m = modal(`<h3>${idx === null ? 'Add share' : 'Edit share'}</h3>
+    <label class="f">Share name</label><input id="sn" type="text" value="${h(s.name)}" autocapitalize="none">
+    <label class="f">Folder (inside ${h(state.samba.data_dir)})</label><input id="sp" type="text" value="${h(s.path)}">
+    <label class="f">Comment</label><input id="sc" type="text" value="${h(s.comment)}">
+    <label class="chk"><input id="sro" type="checkbox" ${s.read_only?'checked':''}> Read-only</label>
+    <label class="chk"><input id="sg" type="checkbox" ${s.guest_ok?'checked':''}> Allow guest (no password)</label>
+    <label class="chk"><input id="sb" type="checkbox" ${s.browseable?'checked':''}> Visible in network browse</label>
+    <label class="f">Allowed users (none selected = any valid user)</label><div>${pills('valid_users')}</div>
+    <label class="f">Users with write access (for read-only shares)</label><div>${pills('write_list')}</div>
+    <div class="btns"><button id="c">Cancel</button><button id="o" class="primary">Save</button></div>`);
+  m.querySelectorAll('.pill').forEach(p => p.onclick = () => {
+    const arr = s[p.dataset.k], u = p.dataset.u, i = arr.indexOf(u);
+    i < 0 ? arr.push(u) : arr.splice(i, 1); p.classList.toggle('on');
+  });
+  $('#c', m).onclick = () => m.remove();
+  $('#o', m).onclick = guard(async () => {
+    const ns = {name:$('#sn', m).value.trim(), path:$('#sp', m).value.trim(), comment:$('#sc', m).value,
+      read_only:$('#sro', m).checked, guest_ok:$('#sg', m).checked, browseable:$('#sb', m).checked,
+      valid_users:s.valid_users, write_list:s.write_list};
+    if (idx === null) state.samba.shares.push(ns); else state.samba.shares[idx] = ns;
+    try { await saveSamba('Share saved'); m.remove(); }
+    catch (e) { if (idx === null) state.samba.shares.pop(); throw e; }
+  });
+}
+
+/* ----------------------------------------------------------------- boot */
+async function boot() {
+  const me = await fetch('/api/me').then(r => r.json());
+  if (!me.auth) return renderLogin();
+  state.sambaEnabled = me.samba; renderShell();
+}
+boot();
+</script>
+</body>
+</html>
