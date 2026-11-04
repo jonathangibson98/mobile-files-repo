@@ -1,6 +1,7 @@
 name: Mobile Files & Samba
 version: "1.3.0"
 slug: mobile_files
+image: ghcr.io/jonathangibson98/{arch}-addon-mobile_files
 description: Phone-friendly file manager, text editor and Samba admin with full filesystem access
 url: https://github.com/jonathangibson98/mobile-files-repo
 arch:
