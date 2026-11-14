@@ -10,8 +10,8 @@ No File Browser dependency. Run it with Docker Compose, or install it as a Home 
 ## Run (Docker Compose)
 
 ```bash
-git clone https://github.com/jonathangibson98/mobile-files
-cd mobile-files
+git clone https://github.com/jonathangibson98/mobile-files-repo
+cd mobile-files-repo
 # edit ADMIN_PASSWORD in docker-compose.yml first
 docker compose up -d --build
 ```
@@ -24,7 +24,7 @@ By default there is one share, `files`, pointing at `/data` (mounted from `./dat
 ## Run (Home Assistant add-on)
 
 1. In Home Assistant go to **Settings → Add-ons → Add-on Store → ⋮ → Repositories**.
-2. Add `https://github.com/jonathangibson98/mobile-files`.
+2. Add `https://github.com/jonathangibson98/mobile-files-repo`.
 3. Install **Mobile Files**, start it, and open **Files** from the sidebar (ingress, no extra login).
 
 The add-on sees the whole filesystem (`/config`, `/share`, `/media`, `/backup`, `/ssl`, `/addons`, `/addon_configs`) and can view, edit, rename, move and delete anything. Add-on options: `root_path`, `hide_from_web`, `hide_from_samba`, `admin_user`, `admin_password` (only for direct access on port 8080), `samba_enabled`, `puid`, `pgid`. See [`mobile_files/DOCS.md`](mobile_files/DOCS.md).
