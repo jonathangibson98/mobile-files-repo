@@ -4,72 +4,117 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Mobile Files</title>
 <link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="manifest" href="manifest.webmanifest">
 <style>
 :root{--bg:#0f1115;--panel:#181b22;--panel2:#1f232c;--line:#2a2f3a;--text:#e8eaf0;--muted:#8b93a5;--accent:#4f8cff;--danger:#ff5d6c;--ok:#3ecf8e;--r:12px}
 @media (prefers-color-scheme:light){:root{--bg:#f4f5f8;--panel:#fff;--panel2:#eef0f5;--line:#dde0e8;--text:#171a21;--muted:#6a7183}}
-*{box-sizing:border-box}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 button,input,select{font:inherit;color:inherit}
 button{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer}
 button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 button.danger{color:var(--danger)}
-button:disabled{opacity:.5}
-input[type=text],input[type=password],select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+button.solid-danger{background:var(--danger);border-color:var(--danger);color:#fff}
+button.link{background:none;border:0;color:var(--accent);padding:6px 8px}
+button:disabled{opacity:.45}
+input[type=text],input[type=password],input[type=search],input[type=number],select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 label.f{display:block;margin:12px 0 4px;color:var(--muted);font-size:13px}
 header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:env(safe-area-inset-top) 12px 0}
 .bar{display:flex;align-items:center;gap:8px;height:52px}
-.bar h1{font-size:18px;margin:0;flex:1}
+.bar h1{font-size:18px;margin:0;flex:1;white-space:nowrap}
+.bar h1 small{font-size:11px;color:var(--muted);font-weight:400;margin-left:4px}
 .tabs{display:flex;gap:4px}
 .tabs button{flex:1;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted)}
 .tabs button.on{color:var(--text);border-color:var(--accent)}
-main{max-width:860px;margin:0 auto;padding:12px 12px calc(90px + env(safe-area-inset-bottom))}
+main{max-width:860px;margin:0 auto;padding:12px 12px calc(96px + env(safe-area-inset-bottom))}
+.tools{display:flex;gap:8px;margin-bottom:8px}
+.tools input{flex:1}
+.tools button{flex:none;padding:10px 12px}
+.favs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:4px;scrollbar-width:none}
+.favs::-webkit-scrollbar{display:none}
+.chip{flex:none;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:13px;white-space:nowrap}
+.chip.on{border-color:var(--accent);color:var(--accent)}
 .crumbs{display:flex;flex-wrap:wrap;gap:2px;align-items:center;font-size:14px;margin-bottom:8px;color:var(--muted)}
 .crumbs a{color:var(--accent);cursor:pointer;padding:4px 2px}
+.crumbs .sp{flex:1}
+.crumbs button{background:none;border:0;padding:4px 8px;font-size:18px;color:var(--muted)}
+.crumbs button.on{color:#f5c542}
 .list{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.row{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--line)}
+.row{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--line);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .row:last-child{border:0}
-.row .ic{width:28px;text-align:center;font-size:20px}
+.row.sel{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.row .ic{width:28px;text-align:center;font-size:20px;flex:none}
 .row .nm{flex:1;min-width:0}
 .row .nm b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.row .nm small{color:var(--muted)}
-.row input[type=checkbox]{width:20px;height:20px}
+.row .nm small{color:var(--muted);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row input[type=checkbox]{width:20px;height:20px;flex:none}
 .row .more{background:none;border:0;padding:6px 10px;font-size:20px;color:var(--muted)}
+.row .act{padding:8px 10px;font-size:14px}
 .empty{padding:30px;text-align:center;color:var(--muted)}
-.fab{position:fixed;left:12px;right:12px;justify-content:flex-end;flex-wrap:wrap;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;gap:10px}
-.fab button{box-shadow:0 4px 14px #0006;padding:12px 14px;border-radius:30px}
-.selbar{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:center;z-index:6}
-.selbar span{flex:1;color:var(--muted)}
+.note{color:var(--muted);font-size:12px;text-align:center;margin:10px 0}
+.fab{position:fixed;left:12px;right:12px;justify-content:flex-end;flex-wrap:wrap;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;gap:10px;z-index:4;pointer-events:none}
+.fab button{box-shadow:0 4px 14px #0006;padding:12px 14px;border-radius:30px;pointer-events:auto}
+.selbar{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:6}
+.selbar .top{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:0 4px}
+.selbar .top span{flex:1;color:var(--muted)}
+.selbar .acts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-width:620px;margin:0 auto}
+.selbar .acts button{padding:8px 2px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.selbar .acts button i{font-style:normal;font-size:18px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:14px}
 .card h2{margin:0 0 4px;font-size:16px}
 .card p{margin:0 0 8px;color:var(--muted);font-size:13px}
+.sec{margin:18px 4px 8px;font-size:16px}
 .chk{display:flex;align-items:center;gap:10px;padding:8px 0}
-.chk input{width:20px;height:20px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chk input{width:20px;height:20px;flex:none}
+.chk small{display:block;color:var(--muted);font-size:12px}
 .pill{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:4px 10px;margin:2px 4px 2px 0;font-size:13px}
 .pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--danger);margin-right:6px}
 .dot.ok{background:var(--ok)}
 pre{background:var(--panel2);border-radius:10px;padding:10px;overflow:auto;font-size:12px;margin:8px 0 0;white-space:pre-wrap}
+code.addr{display:block;flex:1;background:var(--panel2);border-radius:8px;padding:8px 10px;font-size:13px;overflow:auto;white-space:nowrap}
+.addr-row{display:flex;gap:8px;align-items:center;margin:6px 0}
 .modal{position:fixed;inset:0;background:#000a;display:flex;align-items:flex-end;justify-content:center;z-index:20}
 .modal>div{background:var(--panel);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
 @media(min-width:600px){.modal{align-items:center}.modal>div{border-radius:18px}}
-.modal h3{margin:0 0 8px}
-.btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#111;color:#fff;padding:10px 16px;border-radius:20px;z-index:30;max-width:90%}
+.modal h3{margin:0 0 8px;overflow-wrap:anywhere}
+.menu{display:grid;gap:8px}
+.menu button{text-align:left}
+.btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px}
+.kv span:nth-child(odd){color:var(--muted)}
+.kv span:nth-child(even){overflow-wrap:anywhere}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom));background:#111;color:#fff;padding:10px 16px;border-radius:20px;z-index:40;max-width:90%;box-shadow:0 4px 14px #0006}
 .toast.err{background:var(--danger)}
 .login{max-width:360px;margin:15vh auto 0;padding:0 16px}
-.prog{height:4px;background:var(--panel2);border-radius:2px;overflow:hidden;margin:8px 0}
-.prog i{display:block;height:100%;background:var(--accent);width:0}
+.prog{position:fixed;left:12px;right:12px;bottom:calc(80px + env(safe-area-inset-bottom));z-index:7;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:0 4px 14px #0006;max-width:520px;margin:0 auto}
+.prog .t{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);gap:8px}
+.prog .b{height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-top:8px}
+.prog .b i{display:block;height:100%;background:var(--accent);width:0}
 .hidden{display:none!important}
 .bar img,.login img{width:28px;height:28px;border-radius:50%;vertical-align:middle;margin-right:8px}
 .login img{width:72px;height:72px;display:block;margin:0 0 12px}
-.editor{position:fixed;inset:0;z-index:15;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+.editor,.viewer{position:fixed;inset:0;z-index:15;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+.viewer{background:#000;color:#fff;z-index:16}
 .edbar{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line)}
+.viewer .edbar{border-color:#222}
+.viewer .edbar button{background:#1a1a1a;border-color:#333;color:#fff}
 .edbar b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .edbar span{display:flex;gap:8px;flex:none}
 .editor textarea{flex:1;width:100%;border:0;outline:0;resize:none;background:var(--panel);color:var(--text);padding:12px 12px calc(12px + env(safe-area-inset-bottom));font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;tab-size:2;white-space:pre;overflow:auto}
+.editor textarea.wrap{white-space:pre-wrap}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;touch-action:pan-y}
+.stage img,.stage video{max-width:100%;max-height:100%;object-fit:contain}
+.stage iframe{width:100%;height:100%;border:0;background:#fff}
+.stage audio{width:90%}
+.stage .nav{position:absolute;top:50%;transform:translateY(-50%);background:#0008;border:0;color:#fff;font-size:26px;padding:14px 12px;border-radius:30px}
+.stage .nav.l{left:8px}.stage .nav.r{right:8px}
+.drop{position:fixed;inset:0;z-index:30;background:color-mix(in srgb,var(--accent) 25%,transparent);border:3px dashed var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;pointer-events:none}
 </style>
 </head>
 <body>
@@ -77,8 +122,24 @@ pre{background:var(--panel2);border-radius:10px;padding:10px;overflow:auto;font-
 
 <script>
 const $ = (s, el=document) => el.querySelector(s);
-const h = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state = {tab:'files', path:'', items:[], sel:new Set(), selMode:false, disk:null, samba:null, status:null, sambaEnabled:true};
+const $$ = (s, el=document) => [...el.querySelectorAll(s)];
+const h = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const enc = encodeURIComponent;
+const join = (a, b) => a ? a + '/' + b : b;
+const parentOf = p => p.split('/').slice(0, -1).join('/');
+const baseOf = p => p ? p.split('/').pop() : 'Home';
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('mf.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('mf.' + k, JSON.stringify(v)); } catch (e) {} },
+};
+const state = {
+  tab:'files', path:'', items:[], sel:new Set(), selMode:false, disk:null,
+  q:'', results:null, truncated:false,
+  samba:null, status:null, sambaEnabled:true, ingress:false, version:'',
+  favorites:[], settings:{trash:true, trash_days:30}, trashAvailable:false, trash:null,
+  prefs: Object.assign({sort:'name', dir:1, dot:true}, store.get('prefs', {})),
+};
 
 async function api(url, opts={}) {
   opts.headers = Object.assign({'X-Requested-With':'mobile-files'}, opts.headers||{});
@@ -86,16 +147,28 @@ async function api(url, opts={}) {
   const r = await fetch(url, opts);
   let d = {}; try { d = await r.json(); } catch(e) {}
   if (r.status === 401 && !url.includes('/login')) { renderLogin(); throw new Error('Signed out'); }
-  if (!r.ok) throw new Error(d.error || ('Error ' + r.status));
+  if (!r.ok) { const e = new Error(d.error || ('Error ' + r.status)); e.data = d; e.status = r.status; throw e; }
   return d;
 }
 function toast(msg, err) {
+  $$('.toast').forEach(t => t.remove());
   const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 3200);
 }
-const guard = (fn) => async (...a) => { try { await fn(...a); } catch (e) { toast(e.message, true); } };
+const guard = (fn) => async (...a) => { try { await fn(...a); } catch (e) { if (e.message !== 'Signed out') toast(e.message, true); } };
 function fmtSize(n){ if(n<1024) return n+' B'; const u=['KB','MB','GB','TB']; let i=-1; do{n/=1024;i++}while(n>=1024&&i<3); return n.toFixed(n<10?1:0)+' '+u[i]; }
-function fmtDate(t){ return new Date(t*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}); }
+function fmtDate(t, time){ const o = {year:'numeric',month:'short',day:'numeric'}; if (time) Object.assign(o, {hour:'numeric',minute:'2-digit'}); return new Date(t*1000).toLocaleString(undefined, o); }
+
+const EXT = {
+  image: /\.(jpe?g|png|gif|webp|bmp|svg|avif|ico|heic)$/i,
+  video: /\.(mp4|m4v|webm|mov|mkv|ogv)$/i,
+  audio: /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac)$/i,
+  pdf: /\.pdf$/i,
+  archive: /\.(zip|tar|tgz|tar\.gz|tar\.bz2|tbz2|tar\.xz|txz)$/i,
+  text: /\.(txt|md|ya?ml|json|js|ts|py|sh|conf|cfg|ini|log|csv|xml|html?|css|toml|env|j2|jinja|sql)$/i,
+};
+const kind = it => it.dir ? 'dir' : Object.keys(EXT).find(k => EXT[k].test(it.name)) || 'file';
+const ICON = {dir:'📁', image:'🖼️', video:'🎬', audio:'🎵', pdf:'📕', archive:'🗜️', text:'📝', file:'📄'};
 
 function modal(html, onMount) {
   const m = document.createElement('div'); m.className = 'modal';
@@ -104,10 +177,13 @@ function modal(html, onMount) {
   document.body.appendChild(m); if (onMount) onMount(m);
   return m;
 }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = $$('.modal').pop(); if (m) m.remove(); } });
 function prompt2(title, label, value='', ok='OK', type='text') {
   return new Promise(res => {
-    const m = modal(`<h3>${h(title)}</h3><label class="f">${h(label)}</label><input id="pi" type="${type}" value="${h(value)}"><div class="btns"><button id="c">Cancel</button><button id="o" class="primary">${h(ok)}</button></div>`);
-    const i = $('#pi', m); i.focus(); i.select();
+    const m = modal(`<h3>${h(title)}</h3><label class="f">${h(label)}</label><input id="pi" type="${type}" value="${h(value)}" autocapitalize="none"><div class="btns"><button id="c">Cancel</button><button id="o" class="primary">${h(ok)}</button></div>`);
+    const i = $('#pi', m); i.focus();
+    // select the name but not the extension, like desktop file managers
+    const dot = value.lastIndexOf('.'); if (type === 'text' && dot > 0) i.setSelectionRange(0, dot); else i.select();
     const done = v => { m.remove(); res(v); };
     $('#c', m).onclick = () => done(null); $('#o', m).onclick = () => done(i.value);
     i.onkeydown = e => { if (e.key === 'Enter') done(i.value); };
@@ -115,9 +191,15 @@ function prompt2(title, label, value='', ok='OK', type='text') {
 }
 function confirm2(title, text, ok='Delete') {
   return new Promise(res => {
-    const m = modal(`<h3>${h(title)}</h3><p>${h(text)}</p><div class="btns"><button id="c">Cancel</button><button id="o" class="primary danger" style="color:#fff;background:var(--danger);border-color:var(--danger)">${h(ok)}</button></div>`);
+    const m = modal(`<h3>${h(title)}</h3><p>${h(text)}</p><div class="btns"><button id="c">Cancel</button><button id="o" class="solid-danger">${h(ok)}</button></div>`);
     $('#c', m).onclick = () => { m.remove(); res(false); }; $('#o', m).onclick = () => { m.remove(); res(true); };
   });
+}
+function sheet(title, actions) {
+  // actions: [{label, fn, danger, hide}]
+  const list = actions.filter(a => !a.hide);
+  const m = modal(`<h3>${h(title)}</h3><div class="menu">${list.map((a, i) => `<button data-a="${i}" class="${a.danger?'danger':''}">${a.label}</button>`).join('')}</div>`);
+  $$('[data-a]', m).forEach(b => b.onclick = guard(async () => { m.remove(); await list[+b.dataset.a].fn(); }));
 }
 
 /* ---------------------------------------------------------------- login */
@@ -135,192 +217,443 @@ function renderLogin() {
 
 /* ---------------------------------------------------------------- shell */
 function renderShell() {
-  $('#app').innerHTML = `<header><div class="bar"><h1><img src="icon.png" alt="">Mobile Files</h1><button id="lo">Sign out</button></div>
-  <div class="tabs"><button data-t="files">Files</button><button data-t="samba" class="${state.sambaEnabled?'':'hidden'}">Samba</button></div></header>
+  $('#app').innerHTML = `<header><div class="bar"><h1><img src="icon.png" alt="">Mobile Files<small>v${h(state.version)}</small></h1>${state.ingress ? '' : '<button id="lo">Sign out</button>'}</div>
+  <div class="tabs"><button data-t="files">Files</button>${state.trashAvailable ? '<button data-t="trash">Trash</button>' : ''}${state.sambaEnabled ? '<button data-t="samba">Samba</button>' : ''}</div></header>
   <main id="main"></main>`;
-  $('#lo').onclick = async () => { await api('api/logout', {method:'POST'}); renderLogin(); };
-  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { state.tab = b.dataset.t; draw(); });
+  if ($('#lo')) $('#lo').onclick = async () => { await api('api/logout', {method:'POST'}); renderLogin(); };
+  $$('.tabs button').forEach(b => b.onclick = () => { state.tab = b.dataset.t; draw(); });
   draw();
 }
 function draw() {
-  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === state.tab));
-  if (state.tab === 'files') loadFiles(state.path); else loadSamba();
+  $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === state.tab));
+  if (state.tab === 'files') loadFiles(state.path);
+  else if (state.tab === 'trash') loadTrash();
+  else loadSamba();
 }
 
 /* ---------------------------------------------------------------- files */
 const loadFiles = guard(async (path='') => {
-  const d = await api('api/files?path=' + encodeURIComponent(path));
-  state.path = d.path; state.items = d.items; state.disk = d.disk; state.sel.clear(); state.selMode = false;
-  drawFiles();
+  const d = await api('api/files?path=' + enc(path));
+  state.path = d.path; state.items = d.items; state.disk = d.disk;
+  state.sel.clear(); state.selMode = false; state.q = ''; state.results = null;
+  drawFiles(); window.scrollTo(0, 0);
 });
-const join = (a, b) => a ? a + '/' + b : b;
+const runSearch = guard(async (q) => {
+  state.q = q.trim();
+  if (!state.q) { state.results = null; drawFiles(); return; }
+  const d = await api(`api/search?path=${enc(state.path)}&q=${enc(state.q)}`);
+  state.results = d.items; state.truncated = d.truncated; state.sel.clear(); drawFiles();
+});
+function shownItems() {
+  let list = (state.results || state.items).slice();
+  if (!state.prefs.dot) list = list.filter(i => !i.name.startsWith('.'));
+  const {sort, dir} = state.prefs;
+  const key = {
+    name: i => i.name.toLowerCase(),
+    mtime: i => i.mtime,
+    size: i => i.size,
+    type: i => (kind(i) + ' ' + (i.name.split('.').pop() || '')).toLowerCase(),
+  }[sort] || (i => i.name.toLowerCase());
+  list.sort((a, b) => (b.dir - a.dir) || ((key(a) > key(b) ? 1 : key(a) < key(b) ? -1 : 0) * dir) || a.name.localeCompare(b.name));
+  return list;
+}
 function drawFiles() {
+  const items = state.view = shownItems();
   const parts = state.path ? state.path.split('/') : [];
   let acc = '', crumbs = `<a data-p="">Home</a>`;
   parts.forEach(p => { acc = join(acc, p); crumbs += ` / <a data-p="${h(acc)}">${h(p)}</a>`; });
-  const rows = state.items.map((it, i) => `<div class="row" data-i="${i}">
-    ${state.selMode ? `<input type="checkbox" data-i="${i}" ${state.sel.has(it.name)?'checked':''}>` : ''}
-    <div class="ic">${it.dir ? '📁' : '📄'}</div>
-    <div class="nm"><b>${h(it.name)}</b><small>${it.dir ? 'Folder' : fmtSize(it.size)} · ${fmtDate(it.mtime)}</small></div>
-    ${state.selMode ? '' : `<button class="more" data-m="${i}">⋯</button>`}</div>`).join('');
-  const sel = state.sel.size, selMode = state.selMode;
-  $('#main').innerHTML = `<div class="crumbs">${crumbs}</div>
-    <div class="list">${rows || '<div class="empty">This folder is empty</div>'}</div>
-    <p style="color:var(--muted);font-size:12px;text-align:center">${state.disk ? fmtSize(state.disk.free) + ' free of ' + fmtSize(state.disk.total) : ''}</p>
-    <div id="prog" class="hidden"><div class="prog"><i></i></div></div>
-    ${selMode ? `<div class="selbar"><span style="flex:1">${sel} selected</span><button id="mv" ${sel?'':'disabled'}>Move</button><button id="dl" class="danger" ${sel?'':'disabled'}>Delete</button><button id="cl">✕</button></div>`
-          : `<div class="fab"><button id="sm">☑</button><button id="nf">＋ Folder</button><button id="nfile">＋ File</button><button id="up" class="primary">⬆ Upload</button></div>`}
-    <input id="file" type="file" multiple class="hidden">`;
-  document.querySelectorAll('.crumbs a').forEach(a => a.onclick = () => loadFiles(a.dataset.p));
-  document.querySelectorAll('.row').forEach(r => r.onclick = e => {
-    if (e.target.matches('input,.more')) return;
-    const it = state.items[r.dataset.i];
-    if (state.selMode) toggleSel(it.name);
-    else if (it.dir) loadFiles(join(state.path, it.name));
-    else openFile(it);
+  const isFav = state.favorites.includes(state.path);
+  const searching = state.results !== null;
+  const rows = items.map((it, i) => {
+    const sel = state.sel.has(it.path);
+    const meta = [it.dir ? 'Folder' : fmtSize(it.size), fmtDate(it.mtime)];
+    if (searching) meta.push('/' + parentOf(it.path));
+    return `<div class="row ${sel?'sel':''}" data-i="${i}">
+    ${state.selMode ? `<input type="checkbox" data-i="${i}" ${sel?'checked':''}>` : ''}
+    <div class="ic">${ICON[kind(it)]}</div>
+    <div class="nm"><b>${h(it.name)}${it.link ? ' ↪' : ''}</b><small>${h(meta.join(' · '))}</small></div>
+    ${state.selMode ? '' : `<button class="more" data-m="${i}" aria-label="More">⋯</button>`}</div>`;
+  }).join('');
+  const favChips = state.favorites.map(f => `<button class="chip ${f === state.path ? 'on' : ''}" data-fav="${h(f)}">★ ${h(baseOf(f))}</button>`).join('');
+  const sel = state.sel.size;
+  $('#main').innerHTML = `
+    <div class="tools"><input id="q" type="search" placeholder="Search in ${h(baseOf(state.path))}… (* wildcards ok)" value="${h(state.q)}" enterkeyhint="search"><button id="sort" aria-label="Sort and view">⇅</button></div>
+    ${favChips ? `<div class="favs">${favChips}</div>` : ''}
+    <div class="crumbs">${searching ? `<span>${items.length}${state.truncated ? '+' : ''} result${items.length===1?'':'s'} for “${h(state.q)}” in /${h(state.path)}</span><span class="sp"></span><button id="qx" class="link" style="font-size:14px;color:var(--accent)">Clear</button>`
+      : `${crumbs}<span class="sp"></span><button id="star" class="${isFav?'on':''}" aria-label="Favorite">${isFav?'★':'☆'}</button>`}</div>
+    <div class="list">${rows || `<div class="empty">${searching ? 'No matches' : 'This folder is empty'}</div>`}</div>
+    <p class="note">${state.disk ? fmtSize(state.disk.free) + ' free of ' + fmtSize(state.disk.total) : ''}${state.selMode ? '' : ' · Long-press to select'}</p>
+    ${state.selMode ? `<div class="selbar"><div class="top"><span>${sel} selected</span><button id="all" class="link">${sel === items.length && sel ? 'None' : 'All'}</button><button id="cl" class="link">Done</button></div>
+      <div class="acts"><button id="s-cp" ${sel?'':'disabled'}><i>⧉</i>Copy</button><button id="s-mv" ${sel?'':'disabled'}><i>➜</i>Move</button><button id="s-zip" ${sel?'':'disabled'}><i>🗜️</i>Zip</button><button id="s-dl" ${sel?'':'disabled'}><i>⬇</i>Download</button><button id="s-del" class="danger" ${sel?'':'disabled'}><i>🗑</i>Delete</button></div></div>`
+      : `<div class="fab"><button id="sm" aria-label="Select">☑</button><button id="new">＋ New</button><button id="up" class="primary">⬆ Upload</button></div>`}
+    <input id="file" type="file" multiple class="hidden"><input id="dir" type="file" webkitdirectory multiple class="hidden">`;
+
+  $$('.crumbs a').forEach(a => a.onclick = () => loadFiles(a.dataset.p));
+  $$('[data-fav]').forEach(b => b.onclick = () => loadFiles(b.dataset.fav));
+  const q = $('#q'); let qt;
+  q.oninput = () => { clearTimeout(qt); qt = setTimeout(() => { if (q.value.trim().length >= 2 || !q.value.trim()) runSearch(q.value); }, 450); };
+  q.onkeydown = e => { if (e.key === 'Enter') { clearTimeout(qt); runSearch(q.value); q.blur(); } };
+  $('#sort').onclick = sortSheet;
+  if ($('#qx')) $('#qx').onclick = () => { state.q = ''; state.results = null; drawFiles(); };
+  if ($('#star')) $('#star').onclick = guard(() => toggleFav(state.path));
+
+  $$('.row').forEach(r => {
+    const it = items[r.dataset.i];
+    let timer, long = false, sx = 0, sy = 0;
+    r.addEventListener('pointerdown', e => {
+      long = false; sx = e.clientX; sy = e.clientY;
+      timer = setTimeout(() => { long = true; if (navigator.vibrate) navigator.vibrate(15); state.selMode = true; state.sel.add(it.path); drawFiles(); }, 500);
+    });
+    const cancel = () => clearTimeout(timer);
+    r.addEventListener('pointerup', cancel); r.addEventListener('pointerleave', cancel); r.addEventListener('pointercancel', cancel);
+    r.addEventListener('pointermove', e => { if (Math.abs(e.clientX - sx) > 8 || Math.abs(e.clientY - sy) > 8) cancel(); });
+    r.addEventListener('contextmenu', e => e.preventDefault());
+    r.onclick = e => {
+      if (long) return;
+      if (e.target.matches('input,.more')) return;
+      if (state.selMode) toggleSel(it.path);
+      else if (it.dir) loadFiles(it.path);
+      else openFile(it);
+    };
   });
-  document.querySelectorAll('.row input').forEach(c => c.onchange = () => toggleSel(state.items[c.dataset.i].name));
-  document.querySelectorAll('.more').forEach(b => b.onclick = () => itemMenu(state.items[b.dataset.m]));
-  if (selMode) {
+  $$('.row input').forEach(c => c.onchange = () => toggleSel(items[c.dataset.i].path));
+  $$('.more').forEach(b => b.onclick = () => itemMenu(items[b.dataset.m]));
+  if (state.selMode) {
+    const paths = () => [...state.sel];
     $('#cl').onclick = () => { state.sel.clear(); state.selMode = false; drawFiles(); };
-    $('#dl').onclick = guard(async () => { await deleteItems([...state.sel]); });
-    $('#mv').onclick = guard(async () => { await moveItems([...state.sel]); });
+    $('#all').onclick = () => { if (state.sel.size === items.length) state.sel.clear(); else items.forEach(i => state.sel.add(i.path)); drawFiles(); };
+    $('#s-del').onclick = guard(() => deleteItems(paths()));
+    $('#s-mv').onclick = guard(() => transfer(paths(), 'move'));
+    $('#s-cp').onclick = guard(() => transfer(paths(), 'copy'));
+    $('#s-dl').onclick = () => downloadMany(paths());
+    $('#s-zip').onclick = guard(() => compress(paths()));
   } else {
     $('#sm').onclick = () => { state.selMode = true; drawFiles(); };
-    $('#nfile').onclick = guard(async () => {
-      const n = await prompt2('New file', 'File name', '', 'Create'); if (!n) return;
-      const full = join(state.path, n.trim());
-      await api('api/write', {method:'PUT', json:{path:full, content:'', create:true}});
-      await editFile(full, n.trim());
-    });
-    $('#nf').onclick = guard(async () => {
-      const n = await prompt2('New folder', 'Folder name', '', 'Create'); if (!n) return;
-      await api('api/mkdir', {method:'POST', json:{path:state.path, name:n}}); loadFiles(state.path);
-    });
+    $('#new').onclick = () => sheet('New', [
+      {label:'📁 New folder', fn: async () => {
+        const n = await prompt2('New folder', 'Folder name', '', 'Create'); if (!n) return;
+        await api('api/mkdir', {method:'POST', json:{path:state.path, name:n}}); loadFiles(state.path);
+      }},
+      {label:'📝 New text file', fn: async () => {
+        const n = await prompt2('New file', 'File name (e.g. notes.txt)', '', 'Create'); if (!n) return;
+        const full = join(state.path, n.trim());
+        await api('api/write', {method:'PUT', json:{path:full, content:'', create:true}});
+        await editFile(full, n.trim());
+      }},
+      {label:'⬆ Upload files', fn: () => $('#file').click()},
+      {label:'📂 Upload a folder', fn: () => $('#dir').click()},
+    ]);
     $('#up').onclick = () => $('#file').click();
-    $('#file').onchange = e => upload([...e.target.files]);
   }
+  $('#file').onchange = e => upload([...e.target.files]);
+  $('#dir').onchange = e => upload([...e.target.files], true);
 }
-function toggleSel(n) { state.sel.has(n) ? state.sel.delete(n) : state.sel.add(n); drawFiles(); }
+function toggleSel(p) { state.sel.has(p) ? state.sel.delete(p) : state.sel.add(p); drawFiles(); }
+function sortSheet() {
+  const p = state.prefs;
+  const opt = (k, l) => `<label class="chk"><input type="radio" name="s" value="${k}" ${p.sort===k?'checked':''}> ${l}</label>`;
+  const m = modal(`<h3>Sort &amp; view</h3>${opt('name','Name')}${opt('mtime','Date modified')}${opt('size','Size')}${opt('type','Type')}
+    <label class="chk"><input id="desc" type="checkbox" ${p.dir<0?'checked':''}> Reverse order (Z→A, newest, biggest first)</label>
+    <label class="chk"><input id="dot" type="checkbox" ${p.dot?'checked':''}> Show hidden files (names starting with “.”)</label>
+    <div class="btns"><button id="o" class="primary">Done</button></div>`);
+  $('#o', m).onclick = () => {
+    p.sort = ($('input[name=s]:checked', m) || {}).value || 'name';
+    p.dir = $('#desc', m).checked ? -1 : 1; p.dot = $('#dot', m).checked;
+    store.set('prefs', p); m.remove(); drawFiles();
+  };
+}
+async function toggleFav(path) {
+  const f = state.favorites.includes(path) ? state.favorites.filter(x => x !== path) : [...state.favorites, path];
+  const d = await api('api/favorites', {method:'PUT', json:{favorites:f}});
+  state.favorites = d.favorites; toast(f.includes(path) ? 'Added to favorites' : 'Removed from favorites'); drawFiles();
+}
 function itemMenu(it) {
-  const full = join(state.path, it.name);
-  const m = modal(`<h3>${h(it.name)}</h3>
-    <div style="display:grid;gap:8px">
-    ${it.dir ? '' : '<button id="a-dl">Download</button>'}
-    <button id="a-rn">Rename</button><button id="a-mv">Move to…</button><button id="a-sel">Select multiple</button>
-    <button id="a-del" class="danger">Delete</button></div>`);
-  const on = (id, fn) => { const b = $(id, m); if (b) b.onclick = guard(async () => { m.remove(); await fn(); }); };
-  on('#a-dl', () => { location = 'api/download?path=' + encodeURIComponent(full); });
-  on('#a-rn', async () => {
-    const n = await prompt2('Rename', 'New name', it.name, 'Rename'); if (!n || n === it.name) return;
-    await api('api/rename', {method:'POST', json:{path:full, name:n}}); loadFiles(state.path);
-  });
-  on('#a-mv', () => moveItems([it.name]));
-  on('#a-sel', () => { state.selMode = true; state.sel.add(it.name); drawFiles(); });
-  on('#a-del', () => deleteItems([it.name]));
+  const k = kind(it), fav = state.favorites.includes(it.path);
+  sheet(it.name, [
+    {label:'Open', fn: () => it.dir ? loadFiles(it.path) : openFile(it)},
+    {label:'Edit as text', hide: it.dir || ['image','video','audio','pdf','archive'].includes(k), fn: () => openFile(it, true)},
+    {label:'Download', hide: it.dir, fn: () => { location = 'api/download?path=' + enc(it.path); }},
+    {label:'Download as ZIP', hide: !it.dir, fn: () => downloadMany([it.path])},
+    {label:'Show in folder', hide: state.results === null, fn: () => loadFiles(parentOf(it.path))},
+    {label: fav ? '★ Remove from favorites' : '☆ Add to favorites', hide: !it.dir, fn: () => toggleFav(it.path)},
+    {label:'Info', fn: () => showInfo(it)},
+    {label:'Rename', fn: async () => {
+      const n = await prompt2('Rename', 'New name', it.name, 'Rename'); if (!n || n === it.name) return;
+      await api('api/rename', {method:'POST', json:{path:it.path, name:n}}); reload();
+    }},
+    {label:'Duplicate', fn: async () => { await api('api/copy', {method:'POST', json:{paths:[it.path], dest:parentOf(it.path)}}); toast('Duplicated'); reload(); }},
+    {label:'Copy to…', fn: () => transfer([it.path], 'copy')},
+    {label:'Move to…', fn: () => transfer([it.path], 'move')},
+    {label:'Compress to ZIP', hide: k === 'archive', fn: () => compress([it.path])},
+    {label:'Extract here', hide: k !== 'archive', fn: async () => {
+      toast('Extracting…'); const d = await api('api/extract', {method:'POST', json:{path:it.path}}); toast('Extracted to ' + d.name); reload();
+    }},
+    {label:'Select', fn: () => { state.selMode = true; state.sel.add(it.path); drawFiles(); }},
+    {label:'Delete', danger:true, fn: () => deleteItems([it.path])},
+  ]);
 }
-async function openFile(it) {
-  const full = join(state.path, it.name);
-  try { await editFile(full, it.name); }
+const reload = () => state.results !== null ? runSearch(state.q) : loadFiles(state.path);
+async function showInfo(it) {
+  const m = modal(`<h3>${h(it.name)}</h3><div id="iv" class="kv"><span>Loading…</span><span></span></div><div class="btns"><button id="o" class="primary">Close</button></div>`);
+  $('#o', m).onclick = () => m.remove();
+  try {
+    const d = await api('api/info?path=' + enc(it.path));
+    const rows = [['Location', d.full], ['Type', d.dir ? 'Folder' : (it.name.split('.').pop() || '').toUpperCase() + ' file'],
+      ['Size', fmtSize(d.size) + (d.dir ? ` (${d.files} files, ${d.dirs} folders${d.partial ? ', still counting…' : ''})` : '')],
+      ['Modified', fmtDate(d.mtime, true)], ['Permissions', d.mode], ['Owner', `uid ${d.uid} / gid ${d.gid}`]];
+    if (d.link) rows.push(['Links to', d.link]);
+    $('#iv', m).innerHTML = rows.map(([k, v]) => `<span>${h(k)}</span><span>${h(v)}</span>`).join('');
+  } catch (e) { $('#iv', m).innerHTML = `<span>Error</span><span>${h(e.message)}</span>`; }
+}
+async function openFile(it, forceText) {
+  const k = kind(it);
+  if (!forceText && ['image','video','audio','pdf'].includes(k)) return viewer(it);
+  if (!forceText && k === 'archive') return itemMenu(it);
+  try { await editFile(it.path, it.name); }
   catch (e) {
-    // binary or too large to edit: show it in the browser instead
-    if (/Binary|too large/.test(e.message)) window.open('api/download?inline=1&path=' + encodeURIComponent(full));
+    if (/Binary|too large/.test(e.message)) sheet(it.name, [
+      {label:'Open in browser', fn: () => window.open('api/download?inline=1&path=' + enc(it.path))},
+      {label:'Download', fn: () => { location = 'api/download?path=' + enc(it.path); }},
+    ]);
     else toast(e.message, true);
   }
 }
+function viewer(start) {
+  const media = state.view.filter(i => ['image','video'].includes(kind(i)));
+  let idx = media.indexOf(start);
+  const ov = document.createElement('div'); ov.className = 'viewer';
+  ov.innerHTML = `<div class="edbar"><b id="v-n"></b><span><button id="v-d">⬇</button><button id="v-i">ⓘ</button><button id="v-c">✕</button></span></div><div class="stage" id="v-s"></div>`;
+  document.body.appendChild(ov);
+  let cur = start;
+  const show = (it) => {
+    cur = it; const src = 'api/download?inline=1&path=' + enc(it.path), k = kind(it);
+    $('#v-n', ov).textContent = it.name + (idx >= 0 && media.length > 1 ? `  (${idx + 1}/${media.length})` : '');
+    const nav = idx >= 0 && media.length > 1 ? '<button class="nav l" id="v-p">‹</button><button class="nav r" id="v-x">›</button>' : '';
+    $('#v-s', ov).innerHTML = (k === 'image' ? `<img src="${src}" alt="">` : k === 'video' ? `<video src="${src}" controls autoplay playsinline></video>`
+      : k === 'audio' ? `<audio src="${src}" controls autoplay></audio>` : `<iframe src="${src}"></iframe>`) + nav;
+    if (nav) { $('#v-p', ov).onclick = () => step(-1); $('#v-x', ov).onclick = () => step(1); }
+  };
+  const step = d => { if (idx < 0) return; idx = (idx + d + media.length) % media.length; show(media[idx]); };
+  let tx = null;
+  $('#v-s', ov).addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, {passive:true});
+  $('#v-s', ov).addEventListener('touchend', e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; tx = null; if (Math.abs(dx) > 60) step(dx < 0 ? 1 : -1); });
+  const key = e => { if (e.key === 'ArrowLeft') step(-1); else if (e.key === 'ArrowRight') step(1); else if (e.key === 'Escape') close(); };
+  const close = () => { document.removeEventListener('keydown', key); ov.remove(); };
+  document.addEventListener('keydown', key);
+  $('#v-c', ov).onclick = close;
+  $('#v-d', ov).onclick = () => { location = 'api/download?path=' + enc(cur.path); };
+  $('#v-i', ov).onclick = () => showInfo(cur);
+  show(start);
+}
 async function editFile(full, name) {
-  const d = await api('api/read?path=' + encodeURIComponent(full));
+  const d = await api('api/read?path=' + enc(full));
+  let mtime = d.mtime;
   const ov = document.createElement('div'); ov.className = 'editor';
-  ov.innerHTML = `<div class="edbar"><b>${h(name)}</b><span><button id="e-c">Close</button><button id="e-s" class="primary">Save</button></span></div><textarea id="e-t" spellcheck="false" autocapitalize="none" autocomplete="off" autocorrect="off" wrap="off"></textarea>`;
+  ov.innerHTML = `<div class="edbar"><b id="e-n">${h(name)}</b><span><button id="e-w">Wrap</button><button id="e-c">Close</button><button id="e-s" class="primary">Save</button></span></div><textarea id="e-t" spellcheck="false" autocapitalize="none" autocomplete="off" autocorrect="off" wrap="off"></textarea>`;
   document.body.appendChild(ov);
   const t = $('#e-t', ov); t.value = d.content; let dirty = false;
-  t.oninput = () => { dirty = true; };
-  t.onkeydown = e => { if (e.key === 'Tab') { e.preventDefault(); document.execCommand('insertText', false, '  '); } };
-  $('#e-s', ov).onclick = guard(async () => {
-    await api('api/write', {method:'PUT', json:{path:full, content:t.value}}); dirty = false; toast('Saved');
+  const wrap = store.get('wrap', false); t.classList.toggle('wrap', wrap); t.wrap = wrap ? 'soft' : 'off';
+  const mark = v => { dirty = v; $('#e-n', ov).textContent = (v ? '● ' : '') + name; };
+  t.oninput = () => mark(true);
+  const save = guard(async (force) => {
+    try {
+      const r = await api('api/write', {method:'PUT', json:{path:full, content:t.value, mtime, force:!!force}});
+      mtime = r.mtime; mark(false); toast('Saved');
+    } catch (e) {
+      if (e.data && e.data.conflict) { if (await confirm2('File changed', 'Someone else changed this file since you opened it. Overwrite their changes?', 'Overwrite')) await save(true); }
+      else throw e;
+    }
   });
+  t.onkeydown = e => {
+    if (e.key === 'Tab') { e.preventDefault(); document.execCommand('insertText', false, '  '); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
+  };
+  $('#e-w', ov).onclick = () => { const w = !t.classList.contains('wrap'); t.classList.toggle('wrap', w); t.wrap = w ? 'soft' : 'off'; store.set('wrap', w); };
+  $('#e-s', ov).onclick = () => save();
   $('#e-c', ov).onclick = async () => {
     if (dirty && !await confirm2('Discard changes?', 'You have unsaved changes.', 'Discard')) return;
-    ov.remove(); loadFiles(state.path);
+    ov.remove(); reload();
   };
 }
-async function deleteItems(names) {
-  if (!await confirm2('Delete', `Delete ${names.length} item${names.length>1?'s':''}? This cannot be undone.`)) return;
-  await api('api/delete', {method:'POST', json:{paths:names.map(n => join(state.path, n))}});
-  loadFiles(state.path);
+async function deleteItems(paths) {
+  const n = paths.length, what = n === 1 ? `"${baseOf(paths[0])}"` : `${n} items`;
+  let permanent = false;
+  if (state.settings.trash && state.trashAvailable) {
+    const choice = await new Promise(res => {
+      const m = modal(`<h3>Delete ${h(what)}?</h3><p style="color:var(--muted)">It goes to Trash, where you can restore it${state.settings.trash_days ? ` for ${state.settings.trash_days} days` : ''}.</p>
+        <div class="btns"><button id="c">Cancel</button><button id="f" class="danger">Delete forever</button><button id="o" class="solid-danger">Move to Trash</button></div>`);
+      $('#c', m).onclick = () => { m.remove(); res(null); };
+      $('#f', m).onclick = () => { m.remove(); res('forever'); };
+      $('#o', m).onclick = () => { m.remove(); res('trash'); };
+    });
+    if (!choice) return;
+    if (choice === 'forever' && !await confirm2('Delete forever', `Permanently delete ${what}? This cannot be undone.`)) return;
+    permanent = choice === 'forever';
+  } else if (!await confirm2('Delete', `Delete ${what}? This cannot be undone.`)) return;
+  const d = await api('api/delete', {method:'POST', json:{paths, permanent}});
+  state.favorites = state.favorites.filter(f => !paths.some(p => f === p || f.startsWith(p + '/')));
+  toast(d.trashed ? 'Moved to Trash' : 'Deleted'); reload();
 }
-async function moveItems(names) {
-  // folder picker: browse from root
-  let cur = '';
+function downloadMany(paths) {
+  if (paths.length === 1) {
+    const it = (state.view || []).find(i => i.path === paths[0]);
+    if (it && !it.dir) { location = 'api/download?path=' + enc(it.path); return; }
+  }
+  toast('Preparing ZIP…');
+  location = 'api/zip?' + paths.map(p => 'paths=' + enc(p)).join('&');
+}
+async function compress(paths) {
+  const def = paths.length === 1 ? baseOf(paths[0]) : 'Archive';
+  const n = await prompt2('Compress to ZIP', 'Archive name', def + '.zip', 'Compress'); if (!n) return;
+  toast('Compressing…');
+  const d = await api('api/compress', {method:'POST', json:{paths, name:n}});
+  toast('Created ' + d.name); state.selMode = false; reload();
+}
+async function transfer(paths, mode) {
+  let cur = state.path;
+  const verb = mode === 'copy' ? 'Copy' : 'Move';
   const dest = await new Promise(res => {
-    const m = modal('<h3>Move to…</h3><div id="pk"></div><div class="btns"><button id="c">Cancel</button><button id="o" class="primary">Move here</button></div>');
+    const m = modal(`<h3>${verb} ${paths.length === 1 ? h(baseOf(paths[0])) : paths.length + ' items'} to…</h3><div id="pk"></div>
+      <div class="btns"><button id="nf" style="margin-right:auto">＋ Folder</button><button id="c">Cancel</button><button id="o" class="primary">${verb} here</button></div>`);
     const show = guard(async () => {
-      const d = await api('api/files?path=' + encodeURIComponent(cur));
-      const dirs = d.items.filter(i => i.dir && !(names.includes(i.name) && cur === state.path));
-      $('#pk', m).innerHTML = `<p style="color:var(--muted)">/${h(cur)}</p>` + (cur ? '<div class="row" data-up="1"><div class="ic">⬆</div><div class="nm"><b>..</b></div></div>' : '') +
-        dirs.map(i => `<div class="row" data-n="${h(i.name)}"><div class="ic">📁</div><div class="nm"><b>${h(i.name)}</b></div></div>`).join('');
-      $('#pk', m).querySelectorAll('.row').forEach(r => r.onclick = () => {
-        cur = r.dataset.up ? cur.split('/').slice(0, -1).join('/') : join(cur, r.dataset.n); show();
-      });
+      const d = await api('api/files?path=' + enc(cur));
+      const dirs = d.items.filter(i => i.dir && !paths.includes(i.path));
+      const favs = state.favorites.filter(f => f !== cur).map(f => `<button class="chip" data-go="${h(f)}">★ ${h(baseOf(f))}</button>`).join('');
+      $('#pk', m).innerHTML = (favs ? `<div class="favs">${favs}<button class="chip" data-go="">⌂ Home</button></div>` : '') +
+        `<p style="color:var(--muted);margin:4px 0 8px">/${h(cur)}</p><div class="list" style="max-height:45vh;overflow:auto">` +
+        (cur ? '<div class="row" data-up="1"><div class="ic">⬆</div><div class="nm"><b>..</b></div></div>' : '') +
+        (dirs.map(i => `<div class="row" data-n="${h(i.path)}"><div class="ic">📁</div><div class="nm"><b>${h(i.name)}</b></div></div>`).join('') || (cur ? '' : '<div class="empty">No folders</div>')) + '</div>';
+      $$('#pk .row', m).forEach(r => r.onclick = () => { cur = r.dataset.up ? parentOf(cur) : r.dataset.n; show(); });
+      $$('#pk [data-go]', m).forEach(b => b.onclick = () => { cur = b.dataset.go; show(); });
     });
     show();
+    $('#nf', m).onclick = guard(async () => {
+      const n = await prompt2('New folder', 'Folder name', '', 'Create'); if (!n) return;
+      await api('api/mkdir', {method:'POST', json:{path:cur, name:n}}); cur = join(cur, n.trim()); show();
+    });
     $('#c', m).onclick = () => { m.remove(); res(null); };
     $('#o', m).onclick = () => { m.remove(); res(cur); };
   });
   if (dest === null) return;
-  await api('api/move', {method:'POST', json:{paths:names.map(n => join(state.path, n)), dest}});
-  toast('Moved'); loadFiles(state.path);
+  await api('api/' + mode, {method:'POST', json:{paths, dest}});
+  toast(mode === 'copy' ? 'Copied' : 'Moved'); state.selMode = false; reload();
 }
-function upload(files) {
+function upload(files, keepFolders) {
   if (!files.length) return;
-  const fd = new FormData(); files.forEach(f => fd.append('files', f));
+  const fd = new FormData();
+  files.forEach(f => fd.append('files', f, keepFolders && f.webkitRelativePath ? f.webkitRelativePath : f.name));
+  const total = files.reduce((a, f) => a + f.size, 0);
   const x = new XMLHttpRequest();
-  x.open('POST', 'api/upload?path=' + encodeURIComponent(state.path));
+  x.open('POST', 'api/upload?path=' + enc(state.path));
   x.setRequestHeader('X-Requested-With', 'mobile-files');
-  const p = $('#prog'); p.classList.remove('hidden');
-  x.upload.onprogress = e => { if (e.lengthComputable) $('#prog i').style.width = (e.loaded / e.total * 100) + '%'; };
-  x.onload = () => { x.status < 300 ? (toast('Uploaded ' + files.length + ' file(s)'), loadFiles(state.path)) : toast(JSON.parse(x.responseText).error || 'Upload failed', true); };
-  x.onerror = () => toast('Upload failed', true);
+  const p = document.createElement('div'); p.className = 'prog';
+  p.innerHTML = `<div class="t"><span>Uploading ${files.length} file${files.length>1?'s':''} (${fmtSize(total)})</span><span id="pp">0%</span><button class="link" id="px" style="padding:0">Cancel</button></div><div class="b"><i></i></div>`;
+  document.body.appendChild(p);
+  $('#px', p).onclick = () => x.abort();
+  x.upload.onprogress = e => { if (e.lengthComputable) { const v = e.loaded / e.total * 100; $('.b i', p).style.width = v + '%'; $('#pp', p).textContent = Math.round(v) + '%'; } };
+  x.onload = () => { p.remove(); let d = {}; try { d = JSON.parse(x.responseText); } catch (e) {}
+    x.status < 300 ? (toast('Uploaded ' + (d.saved || files).length + ' file(s)'), loadFiles(state.path)) : toast(d.error || 'Upload failed', true); };
+  x.onerror = () => { p.remove(); toast('Upload failed', true); };
+  x.onabort = () => { p.remove(); toast('Upload cancelled'); };
   x.send(fd);
+}
+// drag & drop upload on desktop
+let dragN = 0;
+document.addEventListener('dragenter', e => { if (state.tab !== 'files' || !e.dataTransfer.types.includes('Files')) return; e.preventDefault(); if (dragN++ === 0) { const d = document.createElement('div'); d.className = 'drop'; d.id = 'drop'; d.textContent = 'Drop to upload to /' + state.path; document.body.appendChild(d); } });
+document.addEventListener('dragover', e => { if (state.tab === 'files') e.preventDefault(); });
+document.addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; const d = $('#drop'); if (d) d.remove(); } });
+document.addEventListener('drop', e => { e.preventDefault(); dragN = 0; const d = $('#drop'); if (d) d.remove(); if (state.tab === 'files' && e.dataTransfer.files.length) upload([...e.dataTransfer.files]); });
+
+/* ---------------------------------------------------------------- trash */
+const loadTrash = guard(async () => { state.trash = await api('api/trash'); drawTrash(); });
+function drawTrash() {
+  const t = state.trash;
+  const rows = t.items.map((it, i) => `<div class="row"><div class="ic">${ICON[kind(it)]}</div>
+    <div class="nm"><b>${h(it.name)}</b><small>${h('from /' + it.orig.replace(/^\//, ''))}</small><small>${h(fmtDate(it.deleted, true) + ' · ' + fmtSize(it.size) + (it.source === 'samba' ? ' · via Samba' : ''))}</small></div>
+    <button class="act" data-r="${i}">Restore</button><button class="act danger" data-x="${i}" aria-label="Delete forever">✕</button></div>`).join('');
+  const total = t.items.reduce((a, i) => a + i.size, 0);
+  $('#main').innerHTML = `
+  <div class="card"><h2>Trash</h2><p>Deleted items from the web UI${state.sambaEnabled ? ' and Samba' : ''} land here.</p>
+    <label class="chk"><input id="t-on" type="checkbox" ${t.enabled?'checked':''}><span>Use Trash<small>Off = deletes are permanent</small></span></label>
+    <label class="f">Auto-empty items older than (days, 0 = never)</label><input id="t-days" type="number" min="0" max="3650" value="${t.days}">
+    <div class="btns"><button id="t-save" class="primary">Save</button></div></div>
+  <div style="display:flex;align-items:center;gap:8px;margin:18px 4px 8px"><h2 style="margin:0;font-size:16px;flex:1">${t.items.length} item${t.items.length===1?'':'s'} · ${fmtSize(total)}</h2>
+    ${t.items.length ? '<button id="t-all" class="act">Restore all</button><button id="t-empty" class="act danger">Empty</button>' : ''}</div>
+  <div class="list">${rows || '<div class="empty">Trash is empty</div>'}</div>`;
+  $('#t-save').onclick = guard(async () => {
+    const d = await api('api/settings', {method:'PUT', json:{trash:$('#t-on').checked, trash_days:+$('#t-days').value || 0}});
+    state.settings = d.settings; toast('Saved'); loadTrash();
+  });
+  $$('[data-r]').forEach(b => b.onclick = guard(async () => {
+    const d = await api('api/trash/restore', {method:'POST', json:{ids:[t.items[+b.dataset.r].id]}}); toast('Restored to /' + d.restored[0]); loadTrash();
+  }));
+  $$('[data-x]').forEach(b => b.onclick = guard(async () => {
+    const it = t.items[+b.dataset.x];
+    if (!await confirm2('Delete forever', `Permanently delete "${it.name}"?`)) return;
+    await api('api/trash/purge', {method:'POST', json:{ids:[it.id]}}); loadTrash();
+  }));
+  if ($('#t-empty')) $('#t-empty').onclick = guard(async () => {
+    if (!await confirm2('Empty Trash', `Permanently delete ${t.items.length} items (${fmtSize(total)})?`, 'Empty')) return;
+    await api('api/trash/purge', {method:'POST', json:{all:true}}); toast('Trash emptied'); loadTrash();
+  });
+  if ($('#t-all')) $('#t-all').onclick = guard(async () => {
+    await api('api/trash/restore', {method:'POST', json:{ids:t.items.map(i => i.id)}}); toast('Restored ' + t.items.length + ' items'); loadTrash();
+  });
 }
 
 /* ---------------------------------------------------------------- samba */
 const loadSamba = guard(async () => {
   const [d, s] = await Promise.all([api('api/samba'), api('api/samba/status')]);
-  state.samba = {global: d.global_, shares: d.shares, users: d.users, data_dir: d.data_dir}; state.status = s;
+  state.samba = {global: d.global_, shares: d.shares, users: d.users, data_dir: d.data_dir, trash: d.trash}; state.status = s;
   drawSamba();
 });
+function copyText(txt) {
+  const fallback = () => { const i = document.createElement('textarea'); i.value = txt; document.body.appendChild(i); i.select(); try { document.execCommand('copy'); } catch (e) {} i.remove(); };
+  (navigator.clipboard && window.isSecureContext ? navigator.clipboard.writeText(txt).catch(fallback) : Promise.resolve(fallback())).then(() => toast('Copied'));
+}
 function drawSamba() {
-  const {global: g, shares, users} = state.samba;
+  const {global: g, shares, users} = state.samba, host = location.hostname;
+  const addrs = shares.map(s => [`smb://${host}/${s.name}`, `\\\\${host}\\${s.name}`]);
   const shareCards = shares.map((s, i) => `<div class="card" data-s="${i}">
-    <h2>${h(s.name)}</h2><p>${h(s.path)}</p>
+    <h2>${h(s.name)}</h2><p>${h(s.path)}${s.comment ? ' · ' + h(s.comment) : ''}</p>
     <div>${s.read_only ? '<span class="pill">Read-only</span>' : '<span class="pill">Read/write</span>'}
     ${s.guest_ok ? '<span class="pill">Guest</span>' : ''}${s.browseable ? '' : '<span class="pill">Hidden</span>'}
     ${s.valid_users.length ? '<span class="pill">Users: ' + h(s.valid_users.join(', ')) + '</span>' : '<span class="pill">All users</span>'}</div>
-    <div class="btns" style="justify-content:flex-start"><button data-edit="${i}">Edit</button><button data-rm="${i}" class="danger">Remove</button></div></div>`).join('');
+    <div class="addr-row"><code class="addr">${h(addrs[i][0])}</code><button class="act" data-cp="${h(addrs[i][0])}">Copy</button></div>
+    <div class="addr-row"><code class="addr">${h(addrs[i][1])}</code><button class="act" data-cp="${h(addrs[i][1])}">Copy</button></div>
+    <div class="btns" style="justify-content:flex-start"><button data-edit="${i}">Edit</button><button data-open="${i}">Browse</button><button data-rm="${i}" class="danger">Remove</button></div></div>`).join('');
   const userRows = users.map(u => `<div class="row"><div class="ic">👤</div><div class="nm"><b>${h(u)}</b></div>
-    <button data-pw="${h(u)}">Password</button><button data-du="${h(u)}" class="danger">✕</button></div>`).join('');
+    <button class="act" data-pw="${h(u)}">Password</button><button class="act danger" data-du="${h(u)}">✕</button></div>`).join('');
   $('#main').innerHTML = `
   <div class="card"><h2><span class="dot ${state.status.running ? 'ok' : ''}"></span>Samba ${state.status.running ? 'running' : 'stopped'}</h2>
+    <p>iPhone/iPad: Files → ⋯ → Connect to Server. Mac: Finder → ⌘K. Windows: paste the \\\\ address in File Explorer.</p>
     <details><summary style="color:var(--muted);cursor:pointer">Active connections</summary><pre>${h(state.status.connections || 'None')}</pre></details></div>
   <div class="card"><h2>Server</h2>
     <label class="f">Workgroup</label><input id="g-wg" type="text" value="${h(g.workgroup)}">
     <label class="f">Server description</label><input id="g-ss" type="text" value="${h(g.server_string)}">
     <label class="f">Minimum protocol</label><select id="g-mp">${['SMB2','SMB3','NT1'].map(v => `<option ${g.min_protocol===v?'selected':''}>${v}</option>`).join('')}</select>
-    <label class="chk"><input id="g-gm" type="checkbox" ${g.guest_map ? 'checked' : ''}> Allow guest access (unknown users map to guest)</label>
+    <label class="chk"><input id="g-gm" type="checkbox" ${g.guest_map ? 'checked' : ''}><span>Allow guest access<small>Unknown users map to guest on guest shares</small></span></label>
+    <label class="chk"><input id="g-rc" type="checkbox" ${g.recycle ? 'checked' : ''} ${state.samba.trash ? '' : 'disabled'}><span>Recycle bin<small>${state.samba.trash ? 'Files deleted over Samba go to Trash' : 'Turn on Trash first'}</small></span></label>
+    <label class="chk"><input id="g-ap" type="checkbox" ${g.apple ? 'checked' : ''}><span>macOS / iOS optimizations<small>Faster Finder &amp; Files app, keeps Mac metadata. Needs a filesystem with xattr support.</small></span></label>
     <div class="btns"><button id="g-save" class="primary">Save &amp; apply</button></div></div>
-  <h2 style="margin:18px 4px 8px;font-size:16px">Shares</h2>${shareCards || '<div class="empty">No shares</div>'}
+  <h2 class="sec">Shares</h2>${shareCards || '<div class="empty">No shares</div>'}
   <button id="s-add" style="width:100%;margin-bottom:18px">＋ Add share</button>
-  <h2 style="margin:6px 4px 8px;font-size:16px">Samba users</h2>
+  <h2 class="sec" style="margin-top:6px">Samba users</h2>
   <div class="list">${userRows || '<div class="empty">No users yet. Add one to restrict shares.</div>'}</div>
   <button id="u-add" style="width:100%;margin-top:10px">＋ Add user</button>`;
   $('#g-save').onclick = guard(async () => {
-    state.samba.global = {workgroup:$('#g-wg').value, server_string:$('#g-ss').value, min_protocol:$('#g-mp').value, guest_map:$('#g-gm').checked};
+    state.samba.global = {workgroup:$('#g-wg').value, server_string:$('#g-ss').value, min_protocol:$('#g-mp').value,
+      guest_map:$('#g-gm').checked, recycle:$('#g-rc').checked, apple:$('#g-ap').checked};
     await saveSamba('Samba settings applied');
   });
+  $$('[data-cp]').forEach(b => b.onclick = () => copyText(b.dataset.cp));
   $('#s-add').onclick = () => shareDialog(null);
-  document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => shareDialog(+b.dataset.edit));
-  document.querySelectorAll('[data-rm]').forEach(b => b.onclick = guard(async () => {
+  $$('[data-edit]').forEach(b => b.onclick = () => shareDialog(+b.dataset.edit));
+  $$('[data-open]').forEach(b => b.onclick = () => {
+    const p = shares[+b.dataset.open].path, root = state.samba.data_dir.replace(/\/$/, '');
+    state.tab = 'files'; state.path = p.startsWith(root) ? p.slice(root.length).replace(/^\//, '') : ''; draw();
+  });
+  $$('[data-rm]').forEach(b => b.onclick = guard(async () => {
     const s = shares[+b.dataset.rm];
     if (!await confirm2('Remove share', `Stop sharing "${s.name}"? Files are not deleted.`, 'Remove')) return;
     shares.splice(+b.dataset.rm, 1); await saveSamba('Share removed');
@@ -330,13 +663,13 @@ function drawSamba() {
     const p = await prompt2('Password', 'At least 6 characters', '', 'Create', 'password'); if (!p) return;
     await api('api/samba/users', {method:'POST', json:{name:n, password:p}}); toast('User created'); loadSamba();
   });
-  document.querySelectorAll('[data-pw]').forEach(b => b.onclick = guard(async () => {
+  $$('[data-pw]').forEach(b => b.onclick = guard(async () => {
     const p = await prompt2('New password for ' + b.dataset.pw, 'At least 6 characters', '', 'Change', 'password'); if (!p) return;
-    await api(`api/samba/users/${encodeURIComponent(b.dataset.pw)}/password`, {method:'POST', json:{password:p}}); toast('Password changed');
+    await api(`api/samba/users/${enc(b.dataset.pw)}/password`, {method:'POST', json:{password:p}}); toast('Password changed');
   }));
-  document.querySelectorAll('[data-du]').forEach(b => b.onclick = guard(async () => {
+  $$('[data-du]').forEach(b => b.onclick = guard(async () => {
     if (!await confirm2('Delete user', `Delete Samba user "${b.dataset.du}"?`)) return;
-    await api('api/samba/users/' + encodeURIComponent(b.dataset.du), {method:'DELETE'}); loadSamba();
+    await api('api/samba/users/' + enc(b.dataset.du), {method:'DELETE'}); loadSamba();
   }));
 }
 async function saveSamba(msg) {
@@ -345,7 +678,8 @@ async function saveSamba(msg) {
   toast(msg); loadSamba();
 }
 function shareDialog(idx) {
-  const s = idx === null ? {name:'', path:state.samba.data_dir, comment:'', read_only:false, guest_ok:false, browseable:true, valid_users:[], write_list:[]} : state.samba.shares[idx];
+  const s = idx === null ? {name:'', path:state.samba.data_dir, comment:'', read_only:false, guest_ok:false, browseable:true, valid_users:[], write_list:[]}
+    : JSON.parse(JSON.stringify(state.samba.shares[idx]));
   const users = state.samba.users;
   const pills = (key) => users.length ? users.map(u => `<span class="pill ${s[key].includes(u)?'on':''}" data-k="${key}" data-u="${h(u)}">${h(u)}</span>`).join('') : '<small style="color:var(--muted)">No users defined</small>';
   const m = modal(`<h3>${idx === null ? 'Add share' : 'Edit share'}</h3>
@@ -358,7 +692,7 @@ function shareDialog(idx) {
     <label class="f">Allowed users (none selected = any valid user)</label><div>${pills('valid_users')}</div>
     <label class="f">Users with write access (for read-only shares)</label><div>${pills('write_list')}</div>
     <div class="btns"><button id="c">Cancel</button><button id="o" class="primary">Save</button></div>`);
-  m.querySelectorAll('.pill').forEach(p => p.onclick = () => {
+  $$('.pill', m).forEach(p => p.onclick = () => {
     const arr = s[p.dataset.k], u = p.dataset.u, i = arr.indexOf(u);
     i < 0 ? arr.push(u) : arr.splice(i, 1); p.classList.toggle('on');
   });
@@ -367,9 +701,10 @@ function shareDialog(idx) {
     const ns = {name:$('#sn', m).value.trim(), path:$('#sp', m).value.trim(), comment:$('#sc', m).value,
       read_only:$('#sro', m).checked, guest_ok:$('#sg', m).checked, browseable:$('#sb', m).checked,
       valid_users:s.valid_users, write_list:s.write_list};
+    const backup = state.samba.shares.slice();
     if (idx === null) state.samba.shares.push(ns); else state.samba.shares[idx] = ns;
     try { await saveSamba('Share saved'); m.remove(); }
-    catch (e) { if (idx === null) state.samba.shares.pop(); throw e; }
+    catch (e) { state.samba.shares = backup; throw e; }
   });
 }
 
@@ -377,7 +712,9 @@ function shareDialog(idx) {
 async function boot() {
   const me = await fetch('api/me').then(r => r.json());
   if (!me.auth) return renderLogin();
-  state.sambaEnabled = me.samba; renderShell();
+  Object.assign(state, {sambaEnabled: me.samba, ingress: me.ingress, version: me.version,
+    favorites: me.favorites || [], settings: me.settings || state.settings, trashAvailable: !!me.trash_available});
+  renderShell();
 }
 boot();
 </script>

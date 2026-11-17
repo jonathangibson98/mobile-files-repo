@@ -1,6 +1,7 @@
 services:
   mobile-files:
-    build: .
+    image: ghcr.io/jonathangibson98/mobile-files-repo:latest   # prebuilt (amd64 + arm64)
+    # build: .                           # or build it yourself from this folder instead
     container_name: mobile-files
     restart: unless-stopped
     environment:
@@ -8,8 +9,12 @@ services:
       ADMIN_PASSWORD: change-me          # web UI login. Change this!
       PUID: 1000                         # owner of files created via UI/Samba
       PGID: 1000
-      TZ: America/New_York
+      TZ: Etc/UTC                        # your time zone, e.g. America/Chicago
       # SAMBA_ENABLED: "0"               # set to 0 to run the web file manager only
+      # HIDE_FROM_WEB: "*.db, /private"  # hidden AND blocked in the web UI (comma separated)
+      # HIDE_FROM_SAMBA: "*.db, .cache"  # names hidden in Samba listings (comma separated)
+      # TRASH_DIR: ""                    # empty = no Trash, deletes are permanent
+                                         # default: /data/.mobile_files_trash
     ports:
       - "8080:8080"                      # web UI
       - "445:445"                        # SMB

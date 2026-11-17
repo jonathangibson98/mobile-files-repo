@@ -23,6 +23,11 @@ configuration:
       Names to hide in Samba listings (secrets.yaml, .storage, *.db). Samba only
       matches names, not full paths, so a name is hidden everywhere. Hidden items
       can still be reached if someone types the exact path.
+  trash_path:
+    name: Trash folder
+    description: >-
+      Where deleted files go (web UI and Samba) so you can restore them from the
+      Trash tab. Clear it to make deletes permanent.
   samba_enabled:
     name: Enable Samba
     description: Turn off to run only the web file manager.
