@@ -23,7 +23,7 @@ from pathlib import Path
 from flask import (Flask, Response, jsonify, request, send_file,
                    send_from_directory, session, stream_with_context)
 
-VERSION = "2.2.0"
+VERSION = "2.3.0"
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data")).resolve()  # root of what the UI can see ("/" = everything)
 CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", "/config")).resolve()
 SMB_CONF = Path(os.environ.get("SMB_CONF", "/etc/samba/smb.conf"))
@@ -302,7 +302,8 @@ def logout():
 @app.get("/api/me")
 def me():
     auth = bool(session.get("auth")) or is_ingress()
-    out = dict(auth=auth, samba=SAMBA_ENABLED, ingress=is_ingress(), version=VERSION)
+    out = dict(auth=auth, samba=SAMBA_ENABLED, ingress=is_ingress(), version=VERSION,
+               ai=IS_ADDON and bool(os.environ.get("SUPERVISOR_TOKEN")))
     if auth:
         cfg = load_config()
         out.update(root=str(DATA_DIR), hidden=len(HIDE_RULES), favorites=cfg["favorites"],
@@ -734,6 +735,46 @@ def write_text():
     if not existed:
         chown(p)
     return jsonify(ok=True, mtime=p.stat().st_mtime)
+
+
+@app.post("/api/ai")
+@login_required
+def ai_help():
+    """AI help in the text editor (Home Assistant AI Task; add-on only)."""
+    import ha_ai
+    d = request.get_json(force=True) or {}
+    action = d.get("action") or "explain"
+    name = os.path.basename(str(d.get("path") or "file"))
+    text = str(d.get("content") or "")
+    ask = str(d.get("ask") or "").strip()[:2000]
+    try:
+        ent = json.load(open("/data/options.json")).get("ai_task_entity") or ""
+    except (OSError, ValueError):
+        ent = ""
+    clip = text if len(text) <= 24000 else text[:12000] + "\n...(middle cut)...\n" + text[-12000:]
+    if action == "edit":
+        if not ask:
+            raise ValueError("Say what to change")
+        if len(text) > 24000:
+            raise ValueError("That file is too big for an AI edit (24,000 characters max)")
+        prompt = ("Edit the file %r as asked and reply with ONLY the complete new file content, no markdown fences, no "
+                  "comments about what you did. Keep everything else exactly the same (indentation, comments, order). "
+                  "If it is Home Assistant YAML, keep it valid and use current syntax.\n\nRequest: %s\n\nFile:\n%s" % (name, ask, text))
+    elif action == "check":
+        prompt = ("Check the file %r for mistakes: syntax errors, wrong or outdated Home Assistant options, indentation, "
+                  "typos in entity IDs, security problems (passwords in plain text). List each with its line and the fix, "
+                  "most important first. Say clearly if it looks fine. Short.\n\n%s" % (name, clip))
+    elif action == "ask":
+        prompt = "About the file %r:\n\n%s\n\nAnswer short and plain: %s" % (name, clip, ask)
+    else:
+        prompt = "Explain what the file %r does, in plain words for a non-programmer, short, then the key parts.\n\n%s" % (name, clip)
+    try:
+        out = ha_ai.ask(prompt, ent, "File editor")
+    except RuntimeError as e:
+        return jsonify(error=str(e)), 400
+    if action == "edit":
+        out = re.sub(r"^```[a-zA-Z]*\n?|\n?```\s*$", "", out.strip("\n")) + ("\n" if text.endswith("\n") else "")
+    return jsonify(ok=True, text=out)
 
 
 @app.post("/api/mkdir")

@@ -33,3 +33,7 @@ Deleting something moves it to **Trash** (`trash_path`, default `/share/.mobile_
 - **macOS / iOS optimizations** (vfs_fruit) make Finder and the iOS Files app faster and keep Mac metadata. Turn it off if the shared folder is on a filesystem without extended attributes (e.g. FAT32/exFAT USB drives).
 - If Samba can't bind, make sure nothing else (e.g. the Samba share add-on) uses port 445.
 - `admin_password` is only needed if you open the UI directly on port 8080 (not exposed by default).
+
+## AI help in the editor
+
+In the Home Assistant add-on the text editor has a **✨** button: **Explain it**, **Find mistakes**, **Change it** (say what to change; check the result, then **Put it in the editor** and **Save**) and **Ask**. It uses a Home Assistant AI Task entity (`ai_task_entity`; empty uses the first one). The file's text is sent to your AI provider when you use it. Files over 24,000 characters can be explained and checked but not edited.
