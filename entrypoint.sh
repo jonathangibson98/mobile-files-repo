@@ -5,6 +5,13 @@ PUID="${PUID:-1000}"
 PGID="${PGID:-1000}"
 SAMBA_ENABLED="${SAMBA_ENABLED:-1}"
 
+# Settings saved from the web UI (Settings tab) win over the environment after the first start.
+if [ -f /config/config.json ]; then
+  SAVED_SAMBA="$(python -c 'import json,sys; d=json.load(open("/config/config.json")).get("docker",{}); v=d.get("samba_enabled"); print("" if v is None else ("1" if v else "0"))' 2>/dev/null || true)"
+  [ -n "$SAVED_SAMBA" ] && SAMBA_ENABLED="$SAVED_SAMBA"
+fi
+export SAMBA_ENABLED
+
 mkdir -p /data /config /var/log/samba /var/lib/samba/private /run/samba
 
 if [ "$SAMBA_ENABLED" = "1" ]; then

@@ -10,6 +10,7 @@ export PGID="$(bashio::config 'pgid')"
 export SAMBA_ENABLED=0
 bashio::config.true 'samba_enabled' && SAMBA_ENABLED=1
 export PORT=8080
+export MF_ADDON=1   # settings come from the Configuration tab, not the web UI
 
 ROOT_PATH="$(bashio::config 'root_path')"
 case "$ROOT_PATH" in /*) ;; *) bashio::log.warning "root_path must start with '/', using '/'"; ROOT_PATH=/ ;; esac

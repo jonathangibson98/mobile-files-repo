@@ -53,6 +53,8 @@ Volumes: `/data` (your files), `/config` (settings, `config.json`), `/var/lib/sa
 
 These match the add-on options (`hide_from_web`, `hide_from_samba`, `trash_path`, …), so both versions behave the same.
 
+**Docker: change these in the web UI.** Open the **Settings** tab to edit the hide lists, the Trash folder and the Samba switch. They're saved in `/config/config.json` and win over the environment variables, which only fill them in on the first start. Hide lists and Trash apply right away; turning Samba on or off applies after a container restart. (In the Home Assistant add-on these stay on the add-on's Configuration tab.)
+
 ## Repo layout
 
 - `mobile_files/app/`: the app (Flask API + single-page UI), shared by both versions
