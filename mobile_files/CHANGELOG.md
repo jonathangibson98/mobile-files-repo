@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.0 - 2026-11-17
+
+- **✨ AI help in the text editor** (Home Assistant add-on): **Explain it**, **Find mistakes** (syntax, outdated Home Assistant options, typos, passwords in plain text), **Change it** (describe the change; you see the new file before it goes in the editor, and nothing is saved until you tap Save) and **Ask**. Uses your Home Assistant AI Task (`ai_task_entity`, empty picks one). Not in the plain Docker version.
+
 ## 2.2.2 - 2026-11-17
 
 - **Easier to read over wallpapers.** The page checks how bright the wallpaper is and tints behind the text just enough to keep it readable: bright wallpapers get more, dark ones barely any.

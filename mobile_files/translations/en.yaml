@@ -1,4 +1,7 @@
 configuration:
+  ai_task_entity:
+    name: AI Task entity (optional)
+    description: The Home Assistant AI Task entity behind the ✨ button in the text editor. Leave empty to use the first one.
   admin_user:
     name: Web UI username
     description: Only used when opening the UI directly on port 8080. Ingress (sidebar) needs no login.

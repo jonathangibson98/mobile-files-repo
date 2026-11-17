@@ -107,6 +107,8 @@ code.addr{display:block;flex:1;background:var(--panel2);border-radius:8px;paddin
 .viewer .edbar button{background:#1a1a1a;border-color:#333;color:#fff}
 .edbar b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .edbar span{display:flex;gap:8px;flex:none}
+.aichips{display:flex;gap:6px;flex-wrap:wrap}.aimsg{margin-top:8px;color:var(--muted);font-size:14px}
+.aiout{white-space:pre-wrap;max-height:45vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;font:12px/1.5 ui-monospace,Menlo,monospace}
 .editor textarea{flex:1;width:100%;border:0;outline:0;resize:none;background:var(--panel);color:var(--text);padding:12px 12px calc(12px + env(safe-area-inset-bottom));font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;tab-size:2;white-space:pre;overflow:auto}
 .editor textarea.wrap{white-space:pre-wrap}
 .stage{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;touch-action:pan-y}
@@ -1097,7 +1099,7 @@ async function editFile(full, name) {
   const d = await api('api/read?path=' + enc(full));
   let mtime = d.mtime;
   const ov = document.createElement('div'); ov.className = 'editor';
-  ov.innerHTML = `<div class="edbar"><b id="e-n">${h(name)}</b><span><button id="e-w">Wrap</button><button id="e-c">Close</button><button id="e-s" class="primary">Save</button></span></div><textarea id="e-t" spellcheck="false" autocapitalize="none" autocomplete="off" autocorrect="off" wrap="off"></textarea>`;
+  ov.innerHTML = `<div class="edbar"><b id="e-n">${h(name)}</b><span>${state.ai ? '<button id="e-ai" title="AI help">&#10024;</button>' : ''}<button id="e-w">Wrap</button><button id="e-c">Close</button><button id="e-s" class="primary">Save</button></span></div><textarea id="e-t" spellcheck="false" autocapitalize="none" autocomplete="off" autocorrect="off" wrap="off"></textarea>`;
   document.body.appendChild(ov);
   const t = $('#e-t', ov); t.value = d.content; let dirty = false;
   const wrap = store.get('wrap', false); t.classList.toggle('wrap', wrap); t.wrap = wrap ? 'soft' : 'off';
@@ -1118,10 +1120,36 @@ async function editFile(full, name) {
   };
   $('#e-w', ov).onclick = () => { const w = !t.classList.contains('wrap'); t.classList.toggle('wrap', w); t.wrap = w ? 'soft' : 'off'; store.set('wrap', w); };
   $('#e-s', ov).onclick = () => save();
+  if ($('#e-ai', ov)) $('#e-ai', ov).onclick = () => aiPanel(full, t, mark);
   $('#e-c', ov).onclick = async () => {
     if (dirty && !await confirm2('Discard changes?', 'You have unsaved changes.', 'Discard')) return;
     ov.remove(); reload();
   };
+}
+function aiPanel(full, t, mark) {
+  const m = modal(`<h3>&#10024; AI help</h3>
+    <div class="aichips"><button data-a="explain">Explain it</button><button data-a="check">Find mistakes</button><button data-a="edit">Change it</button><button data-a="ask">Ask</button></div>
+    <textarea id="aiq" rows="3" placeholder="What should it change or answer? e.g. add a 10 minute delay before the light turns off" style="width:100%;margin-top:8px" hidden></textarea>
+    <div id="aim" class="aimsg"></div><pre id="aio" class="aiout" hidden></pre>
+    <div class="btns"><button id="c">Close</button><button id="go" class="primary" hidden>Go</button><button id="use" class="primary" hidden>Put it in the editor</button></div>`);
+  let action = '';
+  const run = async () => {
+    $('#aim', m).textContent = 'Thinking…'; $('#aio', m).hidden = true; $('#use', m).hidden = true;
+    try {
+      const r = await api('api/ai', {method: 'POST', json: {action, path: full, content: t.value, ask: $('#aiq', m).value}});
+      $('#aim', m).textContent = action === 'edit' ? 'Here is the changed file. Check it, then put it in the editor (nothing is saved until you tap Save).' : '';
+      $('#aio', m).textContent = r.text; $('#aio', m).hidden = false; $('#use', m).hidden = action !== 'edit';
+    } catch (e) { $('#aim', m).textContent = e.message; }
+  };
+  m.querySelectorAll('.aichips button').forEach(b => b.onclick = () => {
+    action = b.dataset.a; m.querySelectorAll('.aichips button').forEach(x => x.classList.toggle('primary', x === b));
+    const needs = action === 'edit' || action === 'ask';
+    $('#aiq', m).hidden = !needs; $('#go', m).hidden = !needs;
+    if (needs) $('#aiq', m).focus(); else run();
+  });
+  $('#go', m).onclick = run;
+  $('#c', m).onclick = () => m.remove();
+  $('#use', m).onclick = () => { t.value = $('#aio', m).textContent; mark(true); m.remove(); toast('Changed. Tap Save to keep it.'); };
 }
 async function deleteItems(paths) {
   const n = paths.length, what = n === 1 ? `"${baseOf(paths[0])}"` : `${n} items`;
@@ -1390,7 +1418,7 @@ async function boot() {
   if (!me.auth) return renderLogin();
   Object.assign(state, {sambaEnabled: me.samba, ingress: me.ingress, version: me.version,
     favorites: me.favorites || [], settings: me.settings || state.settings, trashAvailable: !!me.trash_available,
-    docker: me.docker || null});
+    docker: me.docker || null, ai: !!me.ai});
   renderShell();
 }
 boot();
