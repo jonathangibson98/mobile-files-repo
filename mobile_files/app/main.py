@@ -23,7 +23,7 @@ from pathlib import Path
 from flask import (Flask, Response, jsonify, request, send_file,
                    send_from_directory, session, stream_with_context)
 
-VERSION = "2.3.0"
+VERSION = "2.3.1"
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data")).resolve()  # root of what the UI can see ("/" = everything)
 CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", "/config")).resolve()
 SMB_CONF = Path(os.environ.get("SMB_CONF", "/etc/samba/smb.conf"))
