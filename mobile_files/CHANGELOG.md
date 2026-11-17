@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.0 - 2026-11-16
+
+- **Follows your Home Assistant theme.** The web UI now uses the colors of whatever theme Home Assistant is showing, light or dark, and changes live when you switch. Themes with a dashboard wallpaper and frosted-glass cards (like Apple / Liquid Glass themes) carry over too: wallpaper behind, see-through blurred cards, matching corners. Opened outside Home Assistant it keeps its own look.
+
 ## 2.0.0
 - **Docker version fixed**: the prebuilt Docker image now matches the add-on (select checkboxes hidden until select mode, new-file button, text editor, ingress-friendly paths). It's published as `ghcr.io/jonathangibson98/mobile-files-repo:latest`, and `docker-compose.yml` uses it.
 - Docker now supports the same options as the add-on: `HIDE_FROM_WEB`, `HIDE_FROM_SAMBA`, `TRASH_DIR`.
