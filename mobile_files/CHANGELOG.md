@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.1 - 2026-11-17
+
+- Uses the shared **add-on wallpaper** you pick in Photo Hub (new *Add-on wallpaper* tab). This add-on's own Wallpaper option still wins when set.
+
 ## 2.2.0 - 2026-11-16
 
 - **Docker version: settings in the web UI.** New **Settings** tab (Docker only) to edit the hide-from-web and hide-from-Samba lists, the Trash folder and the Samba switch, saved in `/config/config.json`. The environment variables now only set the first-start values. The Home Assistant add-on keeps these on its Configuration tab.
