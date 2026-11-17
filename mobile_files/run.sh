@@ -15,6 +15,10 @@ ROOT_PATH="$(bashio::config 'root_path')"
 case "$ROOT_PATH" in /*) ;; *) bashio::log.warning "root_path must start with '/', using '/'"; ROOT_PATH=/ ;; esac
 export DATA_DIR="$ROOT_PATH"
 
+TRASH_PATH="$(jq -r '.trash_path // ""' "$OPTS")"
+export TRASH_DIR="${TRASH_PATH}"
+bashio::log.info "Trash folder: ${TRASH_DIR:-off}"
+
 export HIDE_WEB_JSON="$(jq -c '.hide_from_web // []' "$OPTS")"
 export HIDE_SAMBA_JSON="$(jq -c '.hide_from_samba // []' "$OPTS")"
 bashio::log.info "Root folder: ${DATA_DIR}"
