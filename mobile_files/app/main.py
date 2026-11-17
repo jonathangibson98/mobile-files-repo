@@ -23,7 +23,7 @@ from pathlib import Path
 from flask import (Flask, Response, jsonify, request, send_file,
                    send_from_directory, session, stream_with_context)
 
-VERSION = "2.0.0"
+VERSION = "2.2.0"
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data")).resolve()  # root of what the UI can see ("/" = everything)
 CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", "/config")).resolve()
 SMB_CONF = Path(os.environ.get("SMB_CONF", "/etc/samba/smb.conf"))
@@ -33,6 +33,10 @@ PUID = int(os.environ.get("PUID", "1000"))
 PGID = int(os.environ.get("PGID", "1000"))
 SAMBA_ENABLED = os.environ.get("SAMBA_ENABLED", "1") == "1"
 SYSTEM_USER = "files"
+# Home Assistant add-on: these settings come from the add-on's Configuration tab.
+# Docker: they are edited in the web UI (Settings tab) and saved in config.json; the
+# environment variables only seed them on first start.
+IS_ADDON = os.environ.get("MF_ADDON") == "1"
 _trash_env = os.environ.get("TRASH_DIR", str(DATA_DIR / ".mobile_files_trash")).strip()
 TRASH_DIR = Path(_trash_env).resolve() if _trash_env else None
 
@@ -52,6 +56,8 @@ def _env_list(json_name, plain_name):
 
 HIDE_WEB = _env_list("HIDE_WEB_JSON", "HIDE_FROM_WEB")        # hidden AND blocked in the web UI
 HIDE_SAMBA = _env_list("HIDE_SAMBA_JSON", "HIDE_FROM_SAMBA")  # hidden in Samba listings (names only)
+ENV_SEED = {"hide_from_web": list(HIDE_WEB), "hide_from_samba": list(HIDE_SAMBA),
+            "trash_path": str(TRASH_DIR or ""), "samba_enabled": SAMBA_ENABLED}
 MAX_EDIT_BYTES = 5 * 1024 * 1024
 SEARCH_LIMIT = 300
 
@@ -108,6 +114,8 @@ def load_config():
     cfg.setdefault("favorites", [])
     cfg.setdefault("users", [])
     cfg.setdefault("shares", [])
+    if not IS_ADDON:
+        docker_settings(cfg)
     return cfg
 
 
@@ -299,6 +307,8 @@ def me():
         cfg = load_config()
         out.update(root=str(DATA_DIR), hidden=len(HIDE_RULES), favorites=cfg["favorites"],
                    settings=cfg["settings"], trash_available=bool(TRASH_DIR))
+        if not IS_ADDON:
+            out["docker"] = dict(docker_settings(cfg), samba_running=SAMBA_ENABLED)
     return jsonify(out)
 
 
@@ -330,6 +340,33 @@ def _compile_hide(entries):
 
 
 HIDE_RULES = _compile_hide(HIDE_WEB)
+
+
+def _clean_list(v):
+    if isinstance(v, str):
+        v = re.split(r"[,\n]", v)
+    return [str(x).strip() for x in (v or []) if str(x).strip()][:200]
+
+
+def docker_settings(cfg):
+    """Docker only: hide lists, trash folder and Samba switch saved from the web UI."""
+    d = cfg.setdefault("docker", {})
+    for k, v in ENV_SEED.items():
+        d.setdefault(k, v)
+    return d
+
+
+def apply_runtime(cfg):
+    """Use the web UI's saved settings (Docker only)."""
+    global HIDE_WEB, HIDE_SAMBA, HIDE_RULES, TRASH_DIR
+    if IS_ADDON:
+        return
+    d = docker_settings(cfg)
+    HIDE_WEB = _clean_list(d.get("hide_from_web"))
+    HIDE_SAMBA = _clean_list(d.get("hide_from_samba"))
+    HIDE_RULES = _compile_hide(HIDE_WEB)
+    tp = str(d.get("trash_path") or "").strip()
+    TRASH_DIR = Path(tp).resolve() if tp else None
 
 
 def in_trash(p):
@@ -1066,10 +1103,30 @@ def settings_put():
             if not 0 <= days <= 3650:
                 raise ValueError("Days must be 0-3650")
             s["trash_days"] = days
+        if any(k in d for k in ENV_SEED):
+            if IS_ADDON:
+                raise ValueError("In the Home Assistant add-on these are set on the add-on's Configuration tab")
+            ds = docker_settings(cfg)
+            for k in ("hide_from_web", "hide_from_samba"):
+                if k in d:
+                    ds[k] = _clean_list(d[k])
+            if "trash_path" in d:
+                tp = str(d["trash_path"] or "").strip()
+                if tp and (not tp.startswith("/") or tp.rstrip("/") == ""):
+                    raise ValueError("Trash folder must be a full path like /data/.trash (or empty for no Trash)")
+                ds["trash_path"] = tp.rstrip("/")
+            if "samba_enabled" in d:
+                ds["samba_enabled"] = bool(d["samba_enabled"])
+            apply_runtime(cfg)
+            prepare_trash()
         save_config(cfg)
         if SAMBA_ENABLED:
-            apply_samba(cfg)   # Samba recycle bin follows the trash switch
-    return jsonify(ok=True, settings=s)
+            apply_samba(cfg)   # Samba recycle bin + hidden names follow these settings
+    out = dict(ok=True, settings=s)
+    if not IS_ADDON:
+        out["docker"] = dict(docker_settings(cfg), samba_running=SAMBA_ENABLED)
+        out["trash_available"] = bool(TRASH_DIR)
+    return jsonify(out)
 
 
 # ----------------------------------------------------------------- samba ---
@@ -1235,6 +1292,7 @@ def restore():
     """Called by entrypoint: recreate system users and smb.conf from config."""
     cfg = load_config()
     save_config(cfg)  # writes any new default keys
+    apply_runtime(cfg)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     prepare_trash()
     if SAMBA_ENABLED:
@@ -1245,6 +1303,12 @@ def restore():
             Path(s["path"]).mkdir(parents=True, exist_ok=True)
     print(f"[mobile-files] v{VERSION} config restored (trash: {TRASH_DIR or 'off'})", flush=True)
 
+
+if not IS_ADDON:
+    try:
+        apply_runtime(load_config())
+    except Exception as e:  # noqa: BLE001
+        print(f"[mobile-files] could not read saved settings: {e}", flush=True)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "restore":

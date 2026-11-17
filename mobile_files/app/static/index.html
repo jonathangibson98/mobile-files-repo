@@ -24,6 +24,7 @@ button.link{background:none;border:0;color:var(--accent);padding:6px 8px}
 button:disabled{opacity:.45}
 input[type=text],input[type=password],input[type=search],input[type=number],select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 label.f{display:block;margin:12px 0 4px;color:var(--muted);font-size:13px}
+.setlist{width:100%;font:13px/1.5 ui-monospace,Menlo,monospace;resize:vertical;margin-top:8px;background:var(--panel2);color:inherit;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:env(safe-area-inset-top) 12px 0}
 .bar{display:flex;align-items:center;gap:8px;height:52px}
 .bar h1{font-size:18px;margin:0;flex:1;white-space:nowrap}
@@ -118,14 +119,18 @@ code.addr{display:block;flex:1;background:var(--panel2);border-radius:8px;paddin
 </style>
 </head>
 <body>
-<!-- ha-theme v1.0.0: copied from .shared/ha-theme.js, edit it there -->
+<!-- ha-theme v1.1.0: copied from .shared/ha-theme.js, edit it there -->
 <script>
-/* HA Theme Bridge v1.0.0
+window.__hbAddon = "mobile_files";
+/* HA Theme Bridge v1.1.0
  * Makes an add-on web UI follow the active Home Assistant theme (colors, dark/light,
  * dashboard wallpaper, glass blur, card corners and shadows) and updates live when
  * the theme changes. It reads the theme from the Home Assistant page that holds the
  * add-on (ingress runs on the same origin) and remaps this page's own colors to it.
  * Opened outside Home Assistant it does nothing, so the page keeps its own look.
+ * Wallpaper: the add-on's "wallpaper" option (Configuration tab) overrides the theme's:
+ *   empty = use the theme's wallpaper, "none" = no wallpaper, or an image:
+ *   /local/pic.jpg (= /config/www/pic.jpg), just pic.jpg, /config/www/..., or https://...
  * Opt out on a page: <html data-ha-theme-off>
  * Variables you can use in new pages: --hb-bg --hb-card --hb-text --hb-text2 --hb-line
  * --hb-primary --hb-accent --hb-on --hb-error --hb-warning --hb-success --hb-field,
@@ -411,6 +416,8 @@ code.addr{display:block;flex:1;background:var(--panel2);border-radius:8px;paddin
       ['top', 'right', 'bottom', 'left'].forEach(function (s) {
         var p = 'border-' + s + '-color', v = st.getPropertyValue(p);
         if (v === 'var(--hb-line)') st.setProperty(p, 'var(--hb-card-border,var(--hb-line))');
+        var pw = 'border-' + s + '-width', w = st.getPropertyValue(pw);
+        if (w && w.indexOf('--hb-') < 0) st.setProperty(pw, 'var(--hb-card-border-width,' + w + ')');
       });
     }
   }
@@ -474,7 +481,7 @@ code.addr{display:block;flex:1;background:var(--panel2);border-radius:8px;paddin
   var BLUR_VARS = ['ha-card-backdrop-filter', 'card-backdrop-filter', 'ha-card-backdrop', 'backdrop-filter',
     'glass-blur', 'ha-blur', 'blur', 'card-blur', 'ha-card-blur'];
   var MOD_VARS = ['card-mod-card', 'card-mod-card-yaml', 'card-mod-root', 'card-mod-view', 'card-mod-row'];
-  var lastKey = '', copied = {};
+  var lastKey = '', copied = {}, wallOverride = null;   /* null = follow the theme */
 
   function themeSource() {
     var d = HA.document;
@@ -516,9 +523,11 @@ code.addr{display:block;flex:1;background:var(--panel2);border-radius:8px;paddin
     th.info = toRGB(g('info-color')) || [3, 155, 229, 1];
     th.wall = g('lovelace-background');
     if (th.wall && !/url\(|gradient\(/.test(th.wall) && !toRGB(th.wall)) th.wall = '';
+    if (wallOverride !== null) th.wall = wallOverride;
     th.radius = g('ha-card-border-radius');
     th.shadow = g('ha-card-box-shadow');
     th.cardBorder = g('ha-card-border-color');
+    th.cardBorderW = g('ha-card-border-width');
     th.dark = th.wall ? lum(th.text) > 0.5 : lum(th.bg) < 0.5;
     return th;
   }
@@ -568,6 +577,7 @@ code.addr{display:block;flex:1;background:var(--panel2);border-radius:8px;paddin
     set('--hb-radius', th.radius);
     set('--hb-shadow', th.shadow);
     set('--hb-card-border', th.cardBorder);
+    set('--hb-card-border-width', th.cardBorderW);
     set('--hb-page', th.wall || css(th.bg));
     root.style.setProperty('color-scheme', th.dark ? 'dark' : 'light');
     root.classList.toggle('hb-dark', th.dark);
@@ -588,6 +598,60 @@ code.addr{display:block;flex:1;background:var(--panel2);border-radius:8px;paddin
       (th.wall ? 'html.hb-themed iframe{background:transparent !important}' : '') +
       'html.hb-themed ::placeholder{color:var(--hb-text2);opacity:.8}';
     root.classList.add('hb-themed');
+  }
+
+  /* ---------- per add-on wallpaper option ---------- */
+  function wallCss(v) {
+    v = String(v == null ? '' : v).trim();
+    if (!v || /^(theme|default|auto)$/i.test(v)) return null;
+    if (/^(none|off|no)$/i.test(v)) return '';
+    if (/url\(|gradient\(/.test(v)) return v;
+    v = v.replace(/^\/?(config|homeassistant)\/www\//, '/local/').replace(/^www\//, '/local/');
+    if (!/^(https?:)?\/\//.test(v) && v.charAt(0) !== '/') v = '/local/' + v;
+    return 'center / cover no-repeat fixed url("' + v.replace(/"/g, '%22') + '")';
+  }
+  function loadWallpaperOption() {
+    var m = /^\/api\/hassio_ingress\/[^/]+\//.exec(location.pathname);
+    var el = themeSource(), hass = el && el.hass;
+    if (!m || !hass || !hass.callWS || !(hass.user && hass.user.is_admin)) return;
+    var base = m[0], key = 'hb-addon:' + base, hint = window.__hbAddon || '';
+    var call = function (ep) {
+      return hass.callWS({ type: 'supervisor/api', endpoint: ep, method: 'get' });
+    };
+    var ingressOf = function (info) { return String((info && (info.ingress_url || info.ingress_entry)) || ''); };
+    var useInfo = function (info) {
+      var o = (info && info.options) || {};
+      wallOverride = 'wallpaper' in o ? wallCss(o.wallpaper) : null;
+      lastKey = '';
+      apply();
+    };
+    var cached = '';
+    try { cached = sessionStorage.getItem(key) || ''; } catch (e) {}
+    var find = function () {
+      return call('/addons').then(function (r) {
+        var list = (r && r.addons) || r || [], slugs = list.map(function (a) { return a.slug; });
+        if (hint) slugs.sort(function (a, b) {
+          var ha = a === hint || a.slice(-hint.length - 1) === '_' + hint, hb = b === hint || b.slice(-hint.length - 1) === '_' + hint;
+          return (hb ? 1 : 0) - (ha ? 1 : 0);
+        });
+        var i = 0;
+        var next = function () {
+          if (i >= slugs.length || i >= 60) return null;
+          var slug = slugs[i++];
+          return call('/addons/' + slug + '/info').then(function (info) {
+            if (ingressOf(info) && base.indexOf(ingressOf(info).replace(/\/?$/, '/')) === 0) {
+              try { sessionStorage.setItem(key, slug); } catch (e) {}
+              return info;
+            }
+            return next();
+          }, next);
+        };
+        return next();
+      });
+    };
+    (cached ? call('/addons/' + cached + '/info').then(function (info) {
+      return ingressOf(info) && base.indexOf(ingressOf(info).replace(/\/?$/, '/')) === 0 ? info : find();
+    }, find) : find()).then(function (info) { if (info) useInfo(info); }, function () {});
   }
 
   /* ---------- run now, then follow changes ---------- */
@@ -617,6 +681,7 @@ code.addr{display:block;flex:1;background:var(--panel2);border-radius:8px;paddin
   } catch (e) {}
   doc.addEventListener('visibilitychange', function () { if (!doc.hidden) later(); });
   window.addEventListener('load', later);
+  try { loadWallpaperOption(); } catch (e) {}
   window.haThemeBridge = { refresh: function () { lastKey = ''; run(); } };
 })();
 </script>
@@ -722,7 +787,7 @@ function renderLogin() {
 /* ---------------------------------------------------------------- shell */
 function renderShell() {
   $('#app').innerHTML = `<header><div class="bar"><h1><img src="icon.png" alt="">Mobile Files<small>v${h(state.version)}</small></h1>${state.ingress ? '' : '<button id="lo">Sign out</button>'}</div>
-  <div class="tabs"><button data-t="files">Files</button>${state.trashAvailable ? '<button data-t="trash">Trash</button>' : ''}${state.sambaEnabled ? '<button data-t="samba">Samba</button>' : ''}</div></header>
+  <div class="tabs"><button data-t="files">Files</button>${state.trashAvailable ? '<button data-t="trash">Trash</button>' : ''}${state.sambaEnabled ? '<button data-t="samba">Samba</button>' : ''}${state.docker ? '<button data-t="settings">Settings</button>' : ''}</div></header>
   <main id="main"></main>`;
   if ($('#lo')) $('#lo').onclick = async () => { await api('api/logout', {method:'POST'}); renderLogin(); };
   $$('.tabs button').forEach(b => b.onclick = () => { state.tab = b.dataset.t; draw(); });
@@ -732,6 +797,7 @@ function draw() {
   $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === state.tab));
   if (state.tab === 'files') loadFiles(state.path);
   else if (state.tab === 'trash') loadTrash();
+  else if (state.tab === 'settings') drawSettings();
   else loadSamba();
 }
 
@@ -1212,12 +1278,41 @@ function shareDialog(idx) {
   });
 }
 
+/* ------------------------------------------------- settings (Docker only) */
+function drawSettings() {
+  const d = state.docker, lines = a => (a || []).join('\n');
+  $('#main').innerHTML = `
+  <div class="card"><h2>Hide from the web UI</h2>
+    <p>One per line. Hidden <b>and</b> blocked here. A name like <code>*.db</code> or <code>.cache</code> matches anywhere; a path like <code>/private</code> matches that folder.</p>
+    <textarea id="s-web" class="setlist" rows="5" placeholder="*.db&#10;/private">${h(lines(d.hide_from_web))}</textarea></div>
+  <div class="card"><h2>Hide from Samba</h2>
+    <p>One per line. Names only, hidden in Samba listings (still reachable if typed).</p>
+    <textarea id="s-smb" class="setlist" rows="5" placeholder=".cache&#10;*.db">${h(lines(d.hide_from_samba))}</textarea></div>
+  <div class="card"><h2>Trash</h2>
+    <label class="f">Trash folder (full path, empty = no Trash, deletes are permanent)</label>
+    <input id="s-trash" type="text" value="${h(d.trash_path)}" placeholder="/data/.mobile_files_trash"></div>
+  <div class="card"><h2>Samba</h2>
+    <label class="chk"><input id="s-samba" type="checkbox" ${d.samba_enabled ? 'checked' : ''}><span>Run the Samba file share<small>${d.samba_enabled === d.samba_running ? 'Takes effect after the container restarts' : '<b>Restart the container</b> to apply this'}</small></span></label></div>
+  <div class="btns"><button id="s-save" class="primary">Save settings</button></div>
+  <p style="color:var(--muted);font-size:12px;margin:14px 4px">Saved in <code>/config/config.json</code>. The Docker environment variables only set these on the first start.</p>`;
+  $('#s-save').onclick = guard(async () => {
+    const split = v => v.split('\n').map(x => x.trim()).filter(Boolean);
+    const r = await api('api/settings', {method:'PUT', json:{hide_from_web:split($('#s-web').value), hide_from_samba:split($('#s-smb').value),
+      trash_path:$('#s-trash').value.trim(), samba_enabled:$('#s-samba').checked}});
+    const hadTrash = state.trashAvailable;
+    Object.assign(state, {docker:r.docker, settings:r.settings, trashAvailable:!!r.trash_available});
+    toast('Settings saved');
+    if (hadTrash !== state.trashAvailable) renderShell(); else drawSettings();
+  });
+}
+
 /* ----------------------------------------------------------------- boot */
 async function boot() {
   const me = await fetch('api/me').then(r => r.json());
   if (!me.auth) return renderLogin();
   Object.assign(state, {sambaEnabled: me.samba, ingress: me.ingress, version: me.version,
-    favorites: me.favorites || [], settings: me.settings || state.settings, trashAvailable: !!me.trash_available});
+    favorites: me.favorites || [], settings: me.settings || state.settings, trashAvailable: !!me.trash_available,
+    docker: me.docker || null});
   renderShell();
 }
 boot();

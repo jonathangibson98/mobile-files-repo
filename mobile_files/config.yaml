@@ -1,5 +1,5 @@
 name: Mobile Files & Samba
-version: "2.1.0"
+version: "2.2.0"
 slug: mobile_files
 image: ghcr.io/jonathangibson98/{arch}-addon-mobile_files
 description: Phone-friendly file manager, text editor and Samba admin with full filesystem access
@@ -38,6 +38,7 @@ options:
   samba_enabled: true
   puid: 0
   pgid: 0
+  wallpaper: ""
 schema:
   admin_user: str
   admin_password: password?
@@ -50,3 +51,4 @@ schema:
   samba_enabled: bool
   puid: int
   pgid: int
+  wallpaper: str?

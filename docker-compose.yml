@@ -10,6 +10,7 @@ services:
       PUID: 1000                         # owner of files created via UI/Samba
       PGID: 1000
       TZ: Etc/UTC                        # your time zone, e.g. America/Chicago
+      # The four below only set the first-start values. After that, change them in the web UI's Settings tab.
       # SAMBA_ENABLED: "0"               # set to 0 to run the web file manager only
       # HIDE_FROM_WEB: "*.db, /private"  # hidden AND blocked in the web UI (comma separated)
       # HIDE_FROM_SAMBA: "*.db, .cache"  # names hidden in Samba listings (comma separated)
